@@ -146,7 +146,10 @@ export const ComputerUseStatus = Schema.Union([
 export type ComputerUseStatus = typeof ComputerUseStatus.Type;
 
 export const ComputerUseControlInput = Schema.Union([
-  Schema.Struct({ action: Schema.Literal("install") }),
+  Schema.Struct({
+    action: Schema.Literal("install"),
+    authorization: Schema.optionalKey(Schema.RedactedFromValue(Schema.String)),
+  }),
   Schema.Struct({ action: Schema.Literal("start") }),
   Schema.Struct({ action: Schema.Literal("prepare-vm") }),
   Schema.Struct({ action: Schema.Literal("cancel-prepare-vm") }),
@@ -172,6 +175,28 @@ export const ComputerUseAction = Schema.Literals([
   "remove-vm",
 ]);
 export type ComputerUseAction = typeof ComputerUseAction.Type;
+
+export class ComputerUseSetupAuthorizationError extends Schema.TaggedError<ComputerUseSetupAuthorizationError>()(
+  "ComputerUseSetupAuthorizationError",
+  { reason: Schema.Literals(["required", "incorrect", "unavailable", "denied"]) },
+) {
+  override get message(): string {
+    switch (this.reason) {
+      case "required":
+        return "Enter the administrator password for the user running Paperplane on this Linux host to continue installation.";
+      case "incorrect":
+        return "The Linux host did not accept that administrator password. Try again.";
+      case "unavailable":
+        return "This Linux host cannot authorize package installation with sudo. An administrator must provide sudo access for the account running Paperplane.";
+      case "denied":
+        return "This Linux host's administrator policy does not allow this account to install system packages.";
+    }
+  }
+
+  get detail(): string {
+    return this.message;
+  }
+}
 
 export class ComputerUseControlError extends Schema.TaggedError<ComputerUseControlError>()(
   "ComputerUseControlError",

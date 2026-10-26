@@ -46,6 +46,8 @@ const SOCKET_OPEN_TIMEOUT = "15 seconds";
 
 export interface RpcSession {
   readonly client: WsRpcProtocolClient;
+  /** Protection of this exact socket attempt, never inferred from a saved network label. */
+  readonly confidentialTransport?: "tls" | "ssh" | "loopback";
   readonly initialConfig: Effect.Effect<ServerConfig, ConnectionAttemptError>;
   readonly subscribeServerConfig: (
     input: ServerConfigSubscriptionInput,
@@ -124,6 +126,22 @@ function serverConfigReplayEvents(
 
 const isSocketErrorReason = Schema.is(Socket.SocketErrorReason);
 
+function confidentialTransportFor(
+  connection: PreparedConnection,
+): RpcSession["confidentialTransport"] {
+  const socket = new URL(connection.socketUrl);
+  if (socket.protocol === "wss:") return "tls";
+  if (socket.protocol !== "ws:") return undefined;
+  if (connection.target._tag === "SshConnectionTarget") return "ssh";
+  if (
+    socket.hostname === "localhost" ||
+    socket.hostname === "[::1]" ||
+    /^127(?:\.\d{1,3}){3}$/.test(socket.hostname)
+  )
+    return "loopback";
+  return undefined;
+}
+
 function mapSessionRpcError(
   error: InitialConfigError | ProbeError | ServerConfigSubscriptionError,
   networkHint: string,
@@ -160,6 +178,7 @@ export const make = Effect.fn("RpcSessionFactory.make")(function* (
   };
 
   const connect = Effect.fnUntraced(function* (connection: PreparedConnection) {
+    const confidentialTransport = confidentialTransportFor(connection);
     const networkHint =
       connection.target._tag === "RelayConnectionTarget" ? ` ${NETWORK_BLOCKING_HINT}` : "";
     const mapRpcError = (error: Parameters<typeof mapSessionRpcError>[0]) =>
@@ -382,7 +401,7 @@ export const make = Effect.fn("RpcSessionFactory.make")(function* (
       Effect.withSpan("clientRuntime.connection.rpcSession.probe"),
     );
 
-    return {
+    const session = {
       client: protocolClient,
       initialConfig,
       subscribeServerConfig,
@@ -397,6 +416,7 @@ export const make = Effect.fn("RpcSessionFactory.make")(function* (
         Deferred.await(configSubscriptionClosed),
       ),
     } satisfies RpcSession;
+    return confidentialTransport === undefined ? session : { ...session, confidentialTransport };
   });
 
   return RpcSessionFactory.of({ connect });

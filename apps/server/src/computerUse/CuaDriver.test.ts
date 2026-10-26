@@ -19,6 +19,7 @@ import * as Path from "effect/Path";
 import * as Option from "effect/Option";
 import * as Queue from "effect/Queue";
 import * as Schema from "effect/Schema";
+import * as Redacted from "effect/Redacted";
 import * as Stream from "effect/Stream";
 import * as TestClock from "effect/testing/TestClock";
 
@@ -50,6 +51,10 @@ const path = require("node:path");
 const file = (name) => path.join(${JSON.stringify(stateDir)}, name);
 const [command, sub] = process.argv.slice(2);
 if (command === "--version") { console.log("cua-driver 9.8.7"); process.exit(0); }
+if (command === "mcp" && sub === "--help") {
+  console.log(fs.existsSync(file("old-driver")) ? "Usage: cua-driver mcp" : "Usage: cua-driver mcp [--direct]");
+  process.exit(0);
+}
 if (command === "status") process.exit(fs.existsSync(file("running")) ? 0 : 1);
 if (command === "stop") { fs.rmSync(file("running"), { force: true }); process.exit(0); }
 if (command === "telemetry" && sub === "status") {
@@ -98,6 +103,7 @@ server.setRequestHandler(types.CallToolRequestSchema, async ({ params }) => {
   const ok = fs.existsSync(file("granted"));
   if (params.name === "disconnect") process.exit(0);
   if (params.name === "health_report") {
+    if (fs.existsSync(file("legacy-health"))) return { content: [], structuredContent: { legacy: true } };
     return { content: [], structuredContent: JSON.parse(fs.existsSync(file("doctor")) ? fs.readFileSync(file("doctor"), "utf8") : '{"checks":[{"name":"AT-SPI","status":"pass","message":"Private guest bus"}]}') };
   }
   if (params.name === "check_permissions") {
@@ -130,9 +136,17 @@ const file = name => path.join(${JSON.stringify(stateDir)}, name);
 const args = process.argv.slice(2);
 if (args.shift() !== "--remote=false") process.exit(2);
 const command = args.shift();
-if (command === "info") { console.log(JSON.stringify({ host: { security: { rootless: !fs.existsSync(file("rootful")) } } })); process.exit(0); }
+if (command === "--version") { console.log(fs.existsSync(file("old-podman")) ? "podman version 2.0.0" : "podman version 5.0.0"); process.exit(0); }
+if (command === "info") {
+  const mapping = [{ size: fs.existsSync(file("single-id")) ? 1 : 65536 }];
+  console.log(JSON.stringify({ host: { security: { rootless: !fs.existsSync(file("rootful")) }, idMappings: { uidmap: mapping, gidmap: mapping } } })); process.exit(0);
+}
+if ((command === "run" || command === "build") && args.includes("--help")) {
+  console.log(fs.existsSync(file("old-podman")) ? "Options: --name --label" : "Options: --interactive --sig-proxy --name --label --network --env-host --http-proxy --ipc --pid --cap-drop --security-opt --read-only --pids-limit --memory --cpus --tmpfs --tag --file"); process.exit(0);
+}
 if (command === "image") process.exit(fs.existsSync(file("image-missing")) ? 1 : 0);
-if (command === "ps") { console.log("[]"); process.exit(0); }
+if (command === "ps") { console.log(args.includes("--quiet") ? (fs.existsSync(file("other-containers")) ? "other" : "") : "[]"); process.exit(0); }
+if (command === "system" && args[0] === "migrate") { fs.rmSync(file("single-id"), { force: true }); process.exit(0); }
 if (command === "build") { fs.rmSync(file("image-missing"), { force: true }); process.exit(0); }
 if (command === "inspect") {
   const name = args[0];
@@ -153,9 +167,9 @@ process.on("SIGTERM", () => { child.kill(); process.exit(0); });
 child.on("exit", code => process.exit(code ?? 0));
 `;
 
-const exited = (code: number): ProcessRunner.ProcessRunOutput => ({
+const exited = (code: number, stdout = ""): ProcessRunner.ProcessRunOutput => ({
   code: ChildProcessSpawner.ExitCode(code),
-  stdout: "",
+  stdout,
   stderr: "",
   timedOut: false,
   stdoutTruncated: false,
@@ -183,6 +197,11 @@ const withDriver = <A, E>(
     readonly platform?: "darwin" | "linux";
     readonly environment?: NodeJS.ProcessEnv;
     readonly discovery?: "home" | "path" | "configured";
+    readonly runtimeInstalled?: boolean;
+    readonly authorizationCode?: number;
+    readonly sudoAuthorized?: boolean;
+    readonly runtimeUpgradeAvailable?: boolean;
+    readonly driverUpgradeAvailable?: boolean;
   },
   body: (harness: Harness) => Effect.Effect<A, E, FileSystem.FileSystem>,
 ) =>
@@ -206,26 +225,70 @@ const withDriver = <A, E>(
     if (options.running) yield* fs.writeFileString(path.join(stateDir, "running"), "");
 
     const podmanDir = path.join(stateDir, "runtime");
-    if (options.platform === "linux") {
-      yield* fs.makeDirectory(podmanDir);
+    const writePodman = Effect.gen(function* () {
       yield* fs.writeFileString(
         path.join(podmanDir, "podman"),
         fakePodmanScript(stateDir, path.join(executableDir, "cua-driver")),
       );
       yield* fs.chmod(path.join(podmanDir, "podman"), 0o755);
+    });
+    if (options.platform === "linux") {
+      yield* fs.makeDirectory(podmanDir);
+      if (options.runtimeInstalled !== false) yield* writePodman;
       if (!options.installed) yield* fs.writeFileString(path.join(stateDir, "image-missing"), "");
     }
     const real = yield* ProcessRunner.ProcessRunner;
+    let runtimeAvailable = options.runtimeInstalled !== false;
     const runs: Array<ProcessRunner.ProcessRunInput> = [];
     const runner = ProcessRunner.ProcessRunner.of({
       run: (input) =>
         Effect.suspend(() => {
           runs.push(input);
+          if (input.command === "podman" && !runtimeAvailable)
+            return Effect.fail(
+              new ProcessRunner.ProcessSpawnError({
+                command: "podman",
+                argumentCount: input.args.length,
+                cause: new Error("ENOENT"),
+              }),
+            );
+          if (input.command === "/usr/bin/id") return Effect.succeed(exited(0, "1000\n"));
+          if (input.command === "/bin/sh") return Effect.succeed(exited(0));
+          if (input.command === "/sbin/ldconfig")
+            return Effect.succeed(exited(0, "libXi.so.6 libxkbcommon.so.0 libX11.so.6"));
+          if (input.command === "/usr/bin/sudo") {
+            if (options.sudoAuthorized === false && !input.args.includes("-S"))
+              return Effect.succeed(exited(1));
+            const code = options.authorizationCode ?? 0;
+            if (code === 0) runtimeAvailable = true;
+            return code === 0
+              ? writePodman.pipe(
+                  Effect.andThen(
+                    options.runtimeUpgradeAvailable === false
+                      ? Effect.void
+                      : fs.remove(path.join(stateDir, "old-podman"), { force: true }),
+                  ),
+                  Effect.as(exited(0)),
+                  Effect.orDie,
+                )
+              : Effect.succeed(exited(code));
+          }
           if (input.command === "/usr/bin/codesign") {
             return Effect.succeed(exited(options.signed === false ? 3 : 0));
           }
           if (input.command === "/bin/bash") {
-            return writeApp.pipe(Effect.as(exited(0)), Effect.orDie);
+            if (input.args[0] === "-c" && input.args[1]?.startsWith("command -v"))
+              return Effect.succeed(exited(0));
+            return writeApp.pipe(
+              Effect.andThen(
+                options.driverUpgradeAvailable === false
+                  ? Effect.void
+                  : fs.remove(path.join(stateDir, "old-driver"), { force: true }),
+              ),
+              Effect.andThen(fs.remove(path.join(stateDir, "legacy-health"), { force: true })),
+              Effect.as(exited(0)),
+              Effect.orDie,
+            );
           }
           return real.run(input);
         }),
@@ -480,9 +543,9 @@ it.effect("installs Linux without codesign or macOS permission commands", () =>
       expect(yield* driver.status).toEqual({ status: "not-installed", platform: "linux" });
       const installed = yield* driver.control({ action: "install" });
       expect(installed).toMatchObject({
-        status: "stopped",
+        status: "running",
         telemetry: null,
-        readiness: { platform: "linux", diagnostics: null, desktops: 0, capacity: 4 },
+        readiness: { platform: "linux", desktops: 0, capacity: 4 },
       });
       const installer = runs.find((input) => input.command === "/bin/bash");
       expect(installer?.env).toMatchObject({
@@ -499,6 +562,245 @@ it.effect("installs Linux without codesign or macOS permission commands", () =>
           (input) => input.command === "/usr/bin/codesign" || input.args[0] === "permissions",
         ),
       ).toBe(false);
+    }),
+  ),
+);
+
+it.effect("Retry repairs Linux runtime setup when Cua Driver is already installed", () =>
+  withDriver({ installed: true, platform: "linux", runtimeInstalled: false }, ({ driver, runs }) =>
+    Effect.gen(function* () {
+      expect(yield* driver.status).toMatchObject({ status: "runtime-unavailable" });
+      const ordinaryStart = yield* driver.control({ action: "start" }).pipe(Effect.flip);
+      expect(ordinaryStart.detail).toContain("rootless Podman");
+      expect(runs.some((input) => input.command === "/usr/bin/sudo")).toBe(false);
+      expect(yield* driver.control({ action: "install" })).toMatchObject({ status: "running" });
+      expect(runs.some((input) => input.command === "/usr/bin/sudo")).toBe(true);
+      expect(runs.some((input) => input.command === "/bin/bash")).toBe(false);
+    }),
+  ),
+);
+
+it.effect("upgrades a Linux driver that lacks direct MCP before building its desktop", () =>
+  withDriver({ installed: true, platform: "linux" }, ({ driver, stateDir, runs }) =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      yield* fs.writeFileString(`${stateDir}/old-driver`, "");
+      expect(yield* driver.control({ action: "install" })).toMatchObject({ status: "running" });
+      expect(yield* fs.exists(`${stateDir}/old-driver`)).toBe(false);
+      expect(
+        runs.some(
+          (input) => input.command === "/bin/bash" && input.args[1]?.includes("https://cua.ai"),
+        ),
+      ).toBe(true);
+    }),
+  ),
+);
+
+it.effect("upgrades Podman when runtime flags are missing even if rootless info succeeds", () =>
+  withDriver({ installed: true, platform: "linux" }, ({ driver, stateDir, runs }) =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      yield* fs.writeFileString(`${stateDir}/old-podman`, "");
+      expect(yield* driver.control({ action: "install" })).toMatchObject({ status: "running" });
+      expect(yield* fs.exists(`${stateDir}/old-podman`)).toBe(false);
+      expect(runs.some((input) => input.command === "/usr/bin/sudo")).toBe(true);
+    }),
+  ),
+);
+
+it.effect(
+  "stops with an explicit compatibility error when repository Podman is still too old",
+  () =>
+    withDriver(
+      { installed: true, platform: "linux", runtimeUpgradeAvailable: false },
+      ({ driver, stateDir, runs }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          yield* fs.writeFileString(`${stateDir}/old-podman`, "");
+          const failure = yield* driver.control({ action: "install" }).pipe(Effect.flip);
+          expect(failure.detail).toContain("Podman 2.0.0 lacks required private-desktop features");
+          expect(runs.filter((input) => input.command === "/usr/bin/sudo")).toHaveLength(1);
+          expect(runs.some((input) => input.command === "/bin/bash")).toBe(false);
+        }),
+    ),
+);
+
+it.effect("stops if the freshly downloaded Cua Driver still cannot provide direct MCP", () =>
+  withDriver(
+    { installed: true, platform: "linux", driverUpgradeAvailable: false },
+    ({ driver, stateDir, runs }) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        yield* fs.writeFileString(`${stateDir}/old-driver`, "");
+        const failure = yield* driver.control({ action: "install" }).pipe(Effect.flip);
+        expect(failure.detail).toContain("does not support direct MCP");
+        expect(runs.filter((input) => input.command === "/bin/bash")).toHaveLength(1);
+      }),
+  ),
+);
+
+it.effect("refreshes an older driver's incompatible health protocol before reporting success", () =>
+  withDriver({ installed: true, platform: "linux" }, ({ driver, stateDir, runs }) =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      yield* fs.writeFileString(`${stateDir}/legacy-health`, "");
+      expect(yield* driver.control({ action: "install" })).toMatchObject({ status: "running" });
+      expect(yield* fs.exists(`${stateDir}/legacy-health`)).toBe(false);
+      expect(runs.filter((input) => input.command === "/bin/bash")).toHaveLength(1);
+    }),
+  ),
+);
+
+for (const [report, expected] of [
+  ["{}", "compatible Linux desktop health checks"],
+  [
+    '{"checks":[{"name":"AT-SPI","status":"fail","message":"No accessibility bus"}]}',
+    "No accessibility bus",
+  ],
+] as const) {
+  it.effect(`does not report a working install for an invalid health report: ${expected}`, () =>
+    withDriver({ installed: false, platform: "linux" }, ({ driver, stateDir }) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        yield* fs.writeFileString(`${stateDir}/doctor`, report);
+        const failure = yield* driver.control({ action: "install" }).pipe(Effect.flip);
+        expect(failure.detail).toContain(expected);
+        expect(yield* driver.status).toMatchObject({ status: "stopped" });
+        yield* fs.remove(`${stateDir}/doctor`);
+        expect(yield* driver.control({ action: "install" })).toMatchObject({ status: "running" });
+      }),
+    ),
+  );
+}
+
+it.effect("repairs an installed Podman's cached single-user namespace automatically", () =>
+  withDriver({ installed: true, platform: "linux" }, ({ driver, stateDir, runs }) =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      yield* fs.writeFileString(`${stateDir}/single-id`, "");
+      expect(yield* driver.status).toMatchObject({ status: "runtime-unavailable" });
+      expect(yield* driver.control({ action: "install" })).toMatchObject({ status: "running" });
+      expect(runs.some((input) => input.command === "/usr/bin/sudo")).toBe(true);
+      expect(yield* fs.exists(`${stateDir}/single-id`)).toBe(false);
+    }),
+  ),
+);
+
+it.effect("does not stop another application's Podman containers to repair mappings", () =>
+  withDriver({ installed: true, platform: "linux" }, ({ driver, stateDir, runs }) =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      yield* fs.writeFileString(`${stateDir}/single-id`, "");
+      yield* fs.writeFileString(`${stateDir}/other-containers`, "");
+      const failure = yield* driver.control({ action: "install" }).pipe(Effect.flip);
+      expect(failure.detail).toContain("Existing Podman containers");
+      expect(runs.some((input) => input.command === "podman" && input.args[1] === "system")).toBe(
+        false,
+      );
+      expect(yield* fs.exists(`${stateDir}/single-id`)).toBe(true);
+    }),
+  ),
+);
+
+it.effect("headless Linux requests authorization without attempting a host GUI", () =>
+  withDriver(
+    { installed: false, platform: "linux", runtimeInstalled: false, sudoAuthorized: false },
+    ({ driver, runs }) =>
+      Effect.gen(function* () {
+        const failure = yield* driver.control({ action: "install" }).pipe(Effect.flip);
+        expect(failure).toMatchObject({
+          _tag: "ComputerUseSetupAuthorizationError",
+          reason: "required",
+        });
+        expect(yield* driver.status).toEqual({ status: "not-installed", platform: "linux" });
+        expect(runs.some((input) => input.command === "/bin/bash")).toBe(false);
+        expect(runs.some((input) => input.command === "/usr/bin/pkexec")).toBe(false);
+      }),
+  ),
+);
+
+it.effect("headless authorization sends a password only through stdin and consumes it", () =>
+  withDriver(
+    { installed: false, platform: "linux", runtimeInstalled: false, sudoAuthorized: false },
+    ({ driver, runs }) =>
+      Effect.gen(function* () {
+        const authorization = Redacted.make("fixture-linux-password");
+        expect(yield* driver.control({ action: "install", authorization })).toMatchObject({
+          status: "running",
+        });
+        const privileged = runs.find((input) => input.command === "/usr/bin/sudo");
+        expect(privileged?.stdin).toBe("fixture-linux-password\n");
+        expect(privileged?.args).not.toContain("fixture-linux-password");
+        expect(JSON.stringify(privileged?.env)).not.toContain("fixture-linux-password");
+        expect(() => Redacted.value(authorization)).toThrow();
+        expect(runs.some((input) => input.command === "/usr/bin/pkexec")).toBe(false);
+      }),
+  ),
+);
+
+it.effect(
+  "a rejected headless password is safe to retry and never reaches driver installation",
+  () =>
+    withDriver(
+      {
+        installed: false,
+        platform: "linux",
+        runtimeInstalled: false,
+        sudoAuthorized: false,
+        authorizationCode: 1,
+      },
+      ({ driver, runs }) =>
+        Effect.gen(function* () {
+          const authorization = Redacted.make("wrong-fixture-password");
+          const failure = yield* driver
+            .control({ action: "install", authorization })
+            .pipe(Effect.flip);
+          expect(failure).toMatchObject({
+            _tag: "ComputerUseSetupAuthorizationError",
+            reason: "incorrect",
+          });
+          expect(JSON.stringify(failure)).not.toContain("wrong-fixture-password");
+          expect(() => Redacted.value(authorization)).toThrow();
+          expect(runs.some((input) => input.command === "/bin/bash")).toBe(false);
+        }),
+    ),
+);
+
+it.effect("reuses administrator authorization without asking for a password in the terminal", () =>
+  withDriver(
+    { installed: false, platform: "linux", runtimeInstalled: false, sudoAuthorized: true },
+    ({ driver, runs }) =>
+      Effect.gen(function* () {
+        expect(yield* driver.control({ action: "install" })).toMatchObject({ status: "running" });
+        expect(runs.some((input) => input.command === "/usr/bin/pkexec")).toBe(false);
+        expect(
+          runs
+            .filter((input) => input.command === "/usr/bin/sudo")
+            .every((input) => input.args[0] === "-n"),
+        ).toBe(true);
+      }),
+  ),
+);
+
+it.effect("one Linux install prepares a missing runtime and serves computer-use tools", () =>
+  withDriver({ installed: false, platform: "linux", runtimeInstalled: false }, ({ driver, runs }) =>
+    Effect.gen(function* () {
+      const [installed] = yield* Effect.all(
+        [driver.control({ action: "install" }), driver.control({ action: "install" })],
+        { concurrency: "unbounded" },
+      );
+      expect(installed).toMatchObject({
+        status: "running",
+        readiness: {
+          platform: "linux",
+          diagnostics: [{ label: "AT-SPI", status: "ok", message: "Private guest bus" }],
+        },
+      });
+      const catalog = yield* driver.catalog();
+      expect(catalog.tools.map((tool) => tool.name)).toContain("get_window_state");
+      yield* driver.control({ action: "install" });
+      expect(runs.filter((input) => input.command === "/usr/bin/sudo")).toHaveLength(1);
+      expect(runs.filter((input) => input.command === "/bin/bash")).toHaveLength(1);
     }),
   ),
 );

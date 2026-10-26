@@ -24,6 +24,8 @@ export function describeDriver(status: ComputerUseStatus | null, error: string |
     case "unsupported":
       return `Computer use needs a macOS, Windows, or Linux host. This environment runs ${status.platform}.`;
     case "not-installed":
+      if (status.platform === "linux")
+        return "Install sets up a private desktop on this environment's Linux host, including remote hosts without a display. Paperplane asks here if an administrator password is needed.";
       return `Not installed on this environment's ${hostName(status.platform)}. Install downloads it from Cua's official releases.`;
     case "runtime-unavailable":
       return status.detail;
@@ -75,7 +77,7 @@ export function primaryAction(
     case "not-installed":
       return { input: { action: "install" }, label: "Install" };
     case "runtime-unavailable":
-      return { input: { action: "start" }, label: "Retry" };
+      return { input: { action: "install" }, label: "Retry" };
     case "needs-desktop-image":
       return { input: { action: "install" }, label: "Prepare desktop" };
     case "untrusted":

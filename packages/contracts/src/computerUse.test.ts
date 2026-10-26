@@ -1,13 +1,27 @@
 import * as Schema from "effect/Schema";
+import * as Redacted from "effect/Redacted";
 import { describe, expect, it } from "@effect/vitest";
 
 import { ComputerUseStatus, ComputerUseControlInput } from "./computerUse.ts";
 
 const decode = Schema.decodeUnknownSync(ComputerUseStatus);
+const encodeControl = Schema.encodeSync(ComputerUseControlInput);
 
 const installed = { status: "running", version: "1.2.3", telemetry: false };
 
 describe("computer use status", () => {
+  it("redacts installation authorization while preserving the wire round-trip", () => {
+    const decodeControl = Schema.decodeUnknownSync(ComputerUseControlInput);
+    const input = decodeControl({ action: "install", authorization: "fixture-password" });
+    expect(JSON.stringify(input)).not.toContain("fixture-password");
+    if (input.action !== "install" || input.authorization === undefined)
+      throw new Error("Missing authorization");
+    expect(Redacted.value(input.authorization)).toBe("fixture-password");
+    expect(encodeControl(input)).toEqual({
+      action: "install",
+      authorization: "fixture-password",
+    });
+  });
   it("carries opt-in macOS VM setup without changing host readiness", () => {
     const vm = {
       state: "needs-consent",

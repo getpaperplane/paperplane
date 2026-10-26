@@ -98,13 +98,27 @@ the first verification of those releases needs internet access.
 
 ### Linux and WSL
 
-Install rootless Podman on the machine running the environment. On Debian or Ubuntu,
-run `sudo apt install podman uidmap` yourself. Run Paperplane as an unprivileged user, and
-check that `podman info` works for that user. Paperplane does not ask for a sudo password
-or use a remote Podman connection.
+Select **Install** to set up computer use. Paperplane installs missing system packages,
+configures rootless Podman, downloads Cua Driver, builds the private desktop image, and
+checks that the desktop works. Automatic setup supports Debian/Ubuntu, Fedora/RHEL,
+Arch, and openSUSE families using apt, dnf, pacman, or zypper. Remote hosts need no
+desktop session or display. Setup uses existing sudo authorization automatically;
+if a password is required, Paperplane asks on the device you are using and does not
+save it. Password entry requires HTTPS, an SSH connection, or a connection on the
+same device. Passwordless setup also works over direct LAN and Tailscale connections.
+Your connection must allow environment maintenance to install system packages.
+Run Paperplane as a regular user; only package installation and account setup need
+administrator access.
 
-Select **Install** or **Prepare desktop** to build the private desktop image. After
-updating Paperplane, select **Prepare desktop** again, because the image changed. The
+The host needs cgroups v2 and enabled unprivileged user namespaces. Setup reports
+administrator or outer-container restrictions without changing the host's security policy.
+
+Install checks existing Podman and Cua Driver capabilities and updates incompatible
+installations when possible. If the host's package repositories cannot provide a
+compatible Podman, setup reports the incompatibility. Setup finishes only after the
+private desktop starts and passes its required health checks.
+
+After updating Paperplane, select **Prepare desktop** again, because the image changed. The
 first build needs internet access and downloads Ubuntu desktop packages. Paperplane
 includes the installed Cua executable in an image identified by its contents.
 Updating that executable may require preparing another image. The driver is

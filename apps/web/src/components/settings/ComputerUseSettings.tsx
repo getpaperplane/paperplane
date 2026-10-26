@@ -1,5 +1,6 @@
 import {
   ComputerUseControlError,
+  ComputerUseSetupAuthorizationError,
   type ComputerUseControlInput,
   type ComputerUseMacosVm,
 } from "@getpaperplane/contracts";
@@ -43,10 +44,21 @@ import { searchableSetting } from "./settingsSearch";
 import { useSettingsScope } from "./SettingsScopeContext";
 import { useScopedSettings, useUpdateScopedSettings } from "./useScopedSettings";
 import { VmSetupDesktopDialog } from "./VmSetupDesktopDialog";
+import { LinuxSetupAuthorizationDialog } from "./LinuxSetupAuthorizationDialog";
 
 type Action = ComputerUseControlInput["action"];
 
 const isControlError = Schema.is(ComputerUseControlError);
+const isSetupAuthorizationError = Schema.is(ComputerUseSetupAuthorizationError);
+
+type ControlFailure =
+  | { readonly kind: "authorization"; readonly error: ComputerUseSetupAuthorizationError }
+  | { readonly kind: "failure"; readonly message: string };
+
+function failureMessage(failure: ControlFailure | null): string | null {
+  if (failure === null) return null;
+  return failure.kind === "authorization" ? failure.error.message : failure.message;
+}
 
 const PENDING_LABELS = {
   install: "Installing…",
@@ -78,19 +90,27 @@ export function ComputerUseSettings() {
   const control = useAtomCommand(computerUseEnvironment.control, {
     label: "Cua Driver",
     reportFailure: false,
+    reportDefect: false,
   });
   const [pending, setPending] = useState<Action | null>(null);
+  const [authorizationTarget, setAuthorizationTarget] = useState<typeof environmentId>(null);
   const status = driver.data;
   const vm = vmOf(status);
   const preparing = vm?.state === "preparing";
   // Progress polling refreshes status constantly; that must not flicker the Cancel button.
   const busy = pending !== null || (driver.isPending && !preparing);
   const primary = vm === null ? primaryAction(status) : null;
+  const canRunPrimary = useAtomValue(
+    computerUseEnvironment.control.permissionAtom(environmentId, primary?.input),
+  );
   const telemetry =
     status?.status === "stopped" || status?.status === "running" ? status.telemetry : null;
   const [setupDesktopOpen, setSetupDesktopOpen] = useState(false);
   // Opening the setup desktop and viewing it need the same grant as the other VM controls.
   const canOperate = useAtomValue(computerUseEnvironment.control.permissionAtom(environmentId));
+  useEffect(() => {
+    setAuthorizationTarget(null);
+  }, [environmentId]);
   const setupDesktopVisible =
     setupDesktopOpen &&
     environmentId !== null &&
@@ -127,18 +147,22 @@ export function ComputerUseSettings() {
   }, [preparing]);
 
   /** Runs one control action; resolves with its failure message, or `null`. */
-  const send = async (input: ComputerUseControlInput): Promise<string | null> => {
-    if (environmentId === null) return "This environment isn't connected.";
+  const send = async (input: ComputerUseControlInput): Promise<ControlFailure | null> => {
+    if (environmentId === null)
+      return { kind: "failure", message: "This environment isn't connected." };
     setPending(input.action);
     try {
       const result = await control({ environmentId, input });
       if (result._tag === "Success" || isAtomCommandInterrupted(result)) return null;
       const error = squashAtomCommandFailure(result);
-      return isControlError(error) && error.detail.length > 0
-        ? error.detail
-        : error instanceof Error
-          ? error.message
-          : "The operation failed.";
+      if (isSetupAuthorizationError(error)) return { kind: "authorization", error };
+      const message =
+        isControlError(error) && error.detail.length > 0
+          ? error.detail
+          : error instanceof Error
+            ? error.message
+            : "The operation failed.";
+      return { kind: "failure", message };
     } finally {
       setPending(null);
       driver.refresh();
@@ -153,11 +177,19 @@ export function ComputerUseSettings() {
     const confirmation = vmConfirmation(input);
     if (confirmation !== null && !window.confirm(confirmation)) return;
     const failure = await send(input);
+    if (
+      failure !== null &&
+      failure.kind === "authorization" &&
+      (failure.error.reason === "required" || failure.error.reason === "incorrect")
+    ) {
+      setAuthorizationTarget(environmentId);
+      return;
+    }
     if (failure !== null)
       toastManager.add({
         type: "error",
         title: controlFailureTitle(input.action),
-        description: failure,
+        description: failureMessage(failure),
       });
   };
 
@@ -287,7 +319,7 @@ export function ComputerUseSettings() {
               <Button
                 size="sm"
                 variant="outline"
-                disabled={busy}
+                disabled={busy || !canRunPrimary}
                 onClick={() => void run(primary.input)}
               >
                 {pending === primary.input.action
@@ -333,10 +365,24 @@ export function ComputerUseSettings() {
           preparing={preparing}
           busy={busy}
           onOpenChange={setSetupDesktopOpen}
-          onStart={() => send({ action: "open-vm-display" })}
+          onStart={async () => {
+            const failure = await send({ action: "open-vm-display" });
+            return failureMessage(failure);
+          }}
           onVerify={() => {
             setSetupDesktopOpen(false);
             void run({ action: "verify-vm" });
+          }}
+        />
+      ) : null}
+      {authorizationTarget !== null && authorizationTarget === environmentId ? (
+        <LinuxSetupAuthorizationDialog
+          key={authorizationTarget}
+          environmentLabel={environment?.label ?? "this environment"}
+          onClose={() => setAuthorizationTarget(null)}
+          onAuthorize={async (authorization) => {
+            const failure = await send({ action: "install", authorization });
+            return failureMessage(failure);
           }}
         />
       ) : null}

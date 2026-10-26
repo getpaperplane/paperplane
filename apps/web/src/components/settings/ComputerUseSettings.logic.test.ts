@@ -55,7 +55,7 @@ describe("computer use setup", () => {
       detail: "Install rootless Podman.",
     } satisfies ComputerUseStatus;
     expect(describeDriver(unavailable, null)).toBe("Install rootless Podman.");
-    expect(primaryAction(unavailable)).toEqual({ input: { action: "start" }, label: "Retry" });
+    expect(primaryAction(unavailable)).toEqual({ input: { action: "install" }, label: "Retry" });
     const missingImage = { status: "needs-desktop-image" } satisfies ComputerUseStatus;
     expect(primaryAction(missingImage)).toEqual({
       input: { action: "install" },
@@ -137,7 +137,7 @@ describe("computer use setup", () => {
     expect(describeDriver(null, "Disconnected")).toBe("Disconnected");
   });
 
-  it("retries a runtime that is unavailable by starting the driver again", () => {
+  it("repairs an unavailable runtime through the installation action", () => {
     const unavailable = {
       status: "runtime-unavailable",
       detail: "The interactive desktop daemon is not running.",
@@ -146,7 +146,7 @@ describe("computer use setup", () => {
       "The interactive desktop daemon is not running.",
     );
     expect(primaryAction(unavailable)).toEqual({
-      input: { action: "start" },
+      input: { action: "install" },
       label: "Retry",
     });
   });

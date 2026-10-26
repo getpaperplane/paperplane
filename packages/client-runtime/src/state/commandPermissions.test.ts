@@ -8,6 +8,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { vi } from "vite-plus/test";
 import {
   AuthAccessWriteScope,
+  AuthEnvironmentMaintainScope,
   AuthProvidersManageScope,
   AuthOrchestrationOperateScope,
   AuthSettingsWriteScope,
@@ -62,6 +63,31 @@ const setup = Effect.gen(function* () {
 });
 
 describe("command permissions", () => {
+  it.effect(
+    "requires maintenance permission for installation while preserving ordinary desktop control",
+    () =>
+      Effect.gen(function* () {
+        const registry = yield* setup;
+        const command = createCommandPermissions(runtime, WS_METHODS.computerUseControl);
+        registry.set(sessions(env), AsyncResult.success(grant(true)));
+        expect(registry.get(command.permissionAtom(env, { action: "start" }))).toBe(true);
+        expect(registry.get(command.permissionAtom(env, { action: "install" }))).toBe(false);
+        expect(
+          (yield* command.authorize(registry, env, { action: "install" }).pipe(Effect.flip))
+            .requiredPermission,
+        ).toBe(AuthEnvironmentMaintainScope);
+        registry.set(
+          sessions(env),
+          AsyncResult.success({
+            ...grant(true),
+            scopes: [AuthEnvironmentMaintainScope],
+            permissions: [AuthEnvironmentMaintainScope],
+          }),
+        );
+        expect(registry.get(command.permissionAtom(env, { action: "install" }))).toBe(true);
+        yield* command.authorize(registry, env, { action: "install" });
+      }).pipe(Effect.scoped),
+  );
   it.effect.each([
     [WS_METHODS.sandboxConfigure, AuthAccessWriteScope],
     [WS_METHODS.sandboxCreate, AuthAccessWriteScope],

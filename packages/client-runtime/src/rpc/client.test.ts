@@ -16,6 +16,7 @@ import * as Fiber from "effect/Fiber";
 import * as Option from "effect/Option";
 import * as Queue from "effect/Queue";
 import * as Ref from "effect/Ref";
+import * as Redacted from "effect/Redacted";
 import * as Stream from "effect/Stream";
 import * as SubscriptionRef from "effect/SubscriptionRef";
 import * as TestClock from "effect/testing/TestClock";
@@ -32,6 +33,8 @@ import * as RpcSession from "../rpc/session.ts";
 import type { WsRpcProtocolClient } from "../rpc/protocol.ts";
 import {
   EnvironmentRpcRequestObserver,
+  RpcPermissionGuard,
+  requestGuarded,
   request,
   runStream,
   subscribe,
@@ -89,6 +92,53 @@ const makeHarness = Effect.fn("TestEnvironmentRpc.makeHarness")(function* () {
 });
 
 describe("environment RPC", () => {
+  it.effect.each([undefined, "tls", "ssh", "loopback"] as const)(
+    "sends installation credentials only on the captured protected session: %s",
+    (transport) =>
+      Effect.gen(function* () {
+        let calls = 0;
+        let unsafeCalls = 0;
+        const client = {
+          [WS_METHODS.computerUseControl]: () =>
+            Effect.sync(() => {
+              calls++;
+              return { status: "not-installed", platform: "linux" };
+            }),
+        } as unknown as WsRpcProtocolClient;
+        const { activeSession, supervisor } = yield* makeHarness();
+        // SAFETY: This fixture only receives a non-discarding control request; every other method is unchanged.
+        const unsafeClient = {
+          ...client,
+          [WS_METHODS.computerUseControl]: () =>
+            Effect.sync(() => {
+              unsafeCalls++;
+              return { status: "not-installed", platform: "linux" };
+            }),
+        } as WsRpcProtocolClient;
+        const original = session(client);
+        yield* SubscriptionRef.set(
+          activeSession,
+          Option.some(
+            transport === undefined ? original : { ...original, confidentialTransport: transport },
+          ),
+        );
+        const result = yield* requestGuarded(WS_METHODS.computerUseControl, {
+          action: "install",
+          authorization: Redacted.make("fixture-password"),
+        }).pipe(
+          Effect.provideService(EnvironmentSupervisor.EnvironmentSupervisor, supervisor),
+          Effect.provideService(RpcPermissionGuard, {
+            authorize: () => SubscriptionRef.set(activeSession, Option.some(session(unsafeClient))),
+          }),
+          Effect.result,
+        );
+        expect(calls).toBe(transport === undefined ? 0 : 1);
+        expect(unsafeCalls).toBe(0);
+        expect(result._tag).toBe(transport === undefined ? "Failure" : "Success");
+        if (result._tag === "Failure")
+          expect(result.failure.message).toContain("encrypted HTTPS or SSH");
+      }),
+  );
   it.effect("reuses the session config stream instead of opening a duplicate subscription", () =>
     Effect.gen(function* () {
       const event: ServerConfigStreamEvent = {

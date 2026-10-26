@@ -19,6 +19,7 @@ import {
 } from "./worktreeInventory.ts";
 import {
   ComputerUseControlError,
+  ComputerUseSetupAuthorizationError,
   ComputerUseControlInput,
   ComputerUseStatus,
   ComputerDesktopsState,
@@ -1995,7 +1996,11 @@ const WsComputerUseStatusRpc = Rpc.make(WS_METHODS.computerUseStatus, {
 const WsComputerUseControlRpc = Rpc.make(WS_METHODS.computerUseControl, {
   payload: ComputerUseControlInput,
   success: ComputerUseStatus,
-  error: Schema.Union([ComputerUseControlError, EnvironmentAuthorizationError]),
+  error: Schema.Union([
+    ComputerUseControlError,
+    ComputerUseSetupAuthorizationError,
+    EnvironmentAuthorizationError,
+  ]),
 });
 
 const WsWorktreeInventoryListRpc = Rpc.make(WS_METHODS.worktreeInventoryList, {
