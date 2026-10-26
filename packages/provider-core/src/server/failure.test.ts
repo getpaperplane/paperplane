@@ -118,6 +118,44 @@ it("does not expose defect text nested inside a known error category", () => {
   assert.isBelow(failure.message.length, MAX_PROVIDER_FAILURE_MESSAGE_LENGTH);
 });
 
+it("describes Codex process exits through stream and startup error wrappers", () => {
+  for (const [evidence, reason] of [
+    [{ code: 0 }, "exit code 0"],
+    [{ code: 17 }, "exit code 17"],
+    [{ signal: "SIGTERM" }, "signal SIGTERM"],
+    [{ signal: "SIGKILL" }, "signal SIGKILL"],
+  ] as const) {
+    const failure = makeProviderFailure({
+      cause: {
+        _tag: "ProviderAdapterEventStreamError",
+        cause: { _tag: "CodexAppServerProcessExitedError", ...evidence },
+      },
+    });
+    assert.equal(
+      failure.message,
+      `The Codex app-server exited (${reason}). Retry the turn to start a new process.`,
+    );
+    assert.equal(
+      failure.code,
+      "signal" in evidence && evidence.signal === "SIGKILL" ? "process_exit_sigkill" : null,
+    );
+  }
+});
+
+it("does not expose arbitrary text in Codex exit evidence", () => {
+  const failure = makeProviderFailure({
+    cause: {
+      _tag: "CodexAppServerProcessExitedError",
+      signal: "Bearer private-secret",
+      message: "private provider diagnostics",
+    },
+  });
+  assert.equal(
+    failure.message,
+    "The Codex app-server exited. Retry the turn to start a new process.",
+  );
+});
+
 it("handles cyclic causes and throwing accessors", () => {
   const cyclic: { message: string; cause?: unknown } = {
     message: "Provider disconnected. Retry the turn.",

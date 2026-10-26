@@ -15,6 +15,11 @@ const fixture = JSON.parse(
 );
 const script = JSON.parse(NodeFS.readFileSync(process.env.PAPERPLANE_CODEX_COLLAB_SCRIPT, "utf8"));
 
+// A scope stop can look like a clean exit even when OOM triggered it.
+if (script.exitCodeOnSigterm !== undefined) {
+  process.on("SIGTERM", () => process.exit(script.exitCodeOnSigterm));
+}
+
 const write = (message) => process.stdout.write(`${JSON.stringify(message)}\n`);
 let turnStartCount = 0;
 let activeTurn;
