@@ -2224,6 +2224,19 @@ describe("orchestrator MCP toolkit", () => {
               number: 8689,
               url: "https://github.com/pingdotgg/t3code/pull/8689",
             });
+            const continuedFrom = {
+              environmentId: EnvironmentId.make("environment:continuation-source"),
+              environmentLabel: "Source machine",
+              threadId: parentThreadId,
+              title: "Original thread",
+              at: "2026-01-01T00:00:00.000Z",
+            };
+            yield* orchestrator.dispatch({
+              type: "thread.metadata.update",
+              commandId: CommandId.make("command:mcp-empty:continuation"),
+              threadId: emptyThread.threadId,
+              continuedFrom,
+            });
             const metadataReadCall = yield* invoke("paperplane_thread_read", {
               threadId: emptyThread.threadId,
             });
@@ -2233,6 +2246,8 @@ describe("orchestrator MCP toolkit", () => {
             expect(metadataRead.thread).toMatchObject({
               title: "Metadata-managed thread",
               linkedPullRequest: linked.linkedPullRequest,
+              continuedFrom,
+              continuedOn: null,
             });
             const metadataListCall = yield* invoke("paperplane_thread_list", { limit: 100 });
             const metadataList = yield* decodeThreadListResult(

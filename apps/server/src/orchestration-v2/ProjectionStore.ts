@@ -1541,6 +1541,12 @@ export function threadShellFromProjection(
     branch: projection.thread.branch,
     worktreePath: projection.thread.worktreePath,
     pullRequests: threadPullRequestsOf(projection.thread),
+    ...(projection.thread.continuedFrom === undefined
+      ? {}
+      : { continuedFrom: projection.thread.continuedFrom }),
+    ...(projection.thread.continuedOn === undefined
+      ? {}
+      : { continuedOn: projection.thread.continuedOn }),
     ...(projection.thread.linkedPullRequest === undefined
       ? {}
       : { linkedPullRequest: projection.thread.linkedPullRequest }),
@@ -1809,6 +1815,12 @@ function shellFromState(input: {
     branch: input.state.thread.branch,
     worktreePath: input.state.thread.worktreePath,
     pullRequests: threadPullRequestsOf(input.state.thread),
+    ...(input.state.thread.continuedFrom === undefined
+      ? {}
+      : { continuedFrom: input.state.thread.continuedFrom }),
+    ...(input.state.thread.continuedOn === undefined
+      ? {}
+      : { continuedOn: input.state.thread.continuedOn }),
     ...(input.state.thread.linkedPullRequest === undefined
       ? {}
       : { linkedPullRequest: input.state.thread.linkedPullRequest }),

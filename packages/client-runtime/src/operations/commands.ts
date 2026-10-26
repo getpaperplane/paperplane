@@ -1,5 +1,6 @@
 import { remapComposerContextAttachments } from "@getpaperplane/shared/composerContextReferences";
 import {
+  type ThreadEnvironmentLink,
   type ThreadLinkedPullRequest,
   CommandId,
   CheckpointId,
@@ -134,6 +135,9 @@ export interface UpdateThreadMetadataInput extends ThreadCommandInput {
   readonly regenerateTitle?: boolean;
   /** Link (object) or unlink (null) a pull request (#8160). */
   readonly linkedPullRequest?: ThreadLinkedPullRequest | null;
+  /** Set (object) or clear (null) cross-environment continuation links. */
+  readonly continuedFrom?: ThreadEnvironmentLink | null;
+  readonly continuedOn?: ThreadEnvironmentLink | null;
   /** Apply only while no message or run has landed on the thread. */
   readonly expectedEmpty?: boolean;
 }
@@ -573,6 +577,8 @@ export const updateThreadMetadata = Effect.fn("EnvironmentCommands.updateThreadM
       input.worktreePath !== undefined ||
       input.regenerateTitle !== undefined ||
       input.linkedPullRequest !== undefined ||
+      input.continuedFrom !== undefined ||
+      input.continuedOn !== undefined ||
       input.limitRecovery !== undefined
     ) {
       result = yield* dispatch({
@@ -588,6 +594,8 @@ export const updateThreadMetadata = Effect.fn("EnvironmentCommands.updateThreadM
         ...(input.linkedPullRequest === undefined
           ? {}
           : { linkedPullRequest: input.linkedPullRequest }),
+        ...(input.continuedFrom === undefined ? {} : { continuedFrom: input.continuedFrom }),
+        ...(input.continuedOn === undefined ? {} : { continuedOn: input.continuedOn }),
       });
     }
     if (input.modelSelection !== undefined) {

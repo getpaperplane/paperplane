@@ -12,6 +12,7 @@ import {
   CommandId,
   ContextHandoffId,
   ContextTransferId,
+  EnvironmentId,
   EventId,
   IsoDateTime,
   MessageId,
@@ -369,6 +370,20 @@ export const OrchestrationV2LimitRecoveryUpdate = Schema.Struct({
 );
 export type OrchestrationV2LimitRecoveryUpdate = typeof OrchestrationV2LimitRecoveryUpdate.Type;
 
+/**
+ * A thread on another environment that this thread continued from, or was
+ * continued on. The client copies context between environments; servers never
+ * contact each other, so the label and title are snapshots taken at that time.
+ */
+export const ThreadEnvironmentLink = Schema.Struct({
+  environmentId: EnvironmentId,
+  environmentLabel: TrimmedNonEmptyString,
+  threadId: ThreadId,
+  title: TrimmedNonEmptyString,
+  at: IsoDateTime,
+});
+export type ThreadEnvironmentLink = typeof ThreadEnvironmentLink.Type;
+
 export const OrchestrationV2AppThread = Schema.Struct({
   ...OrchestrationV2CreationFields,
   /** Immutable app-owned id namespace. Missing is legacy, never a default to upgrade. */
@@ -388,6 +403,10 @@ export const OrchestrationV2AppThread = Schema.Struct({
   pullRequests: Schema.optional(Schema.Array(ThreadPullRequestLink)),
   /** Pull request discovered from the thread's current branch. */
   branchPullRequest: Schema.optional(Schema.NullOr(ThreadLinkedPullRequest)),
+  /** Thread on another environment this one continued from. */
+  continuedFrom: Schema.optional(Schema.NullOr(ThreadEnvironmentLink)),
+  /** Latest thread on another environment this one was continued on. */
+  continuedOn: Schema.optional(Schema.NullOr(ThreadEnvironmentLink)),
   activeProviderThreadId: Schema.NullOr(ProviderThreadId),
   historyOrigin: Schema.optional(OrchestrationV2ThreadHistoryOrigin),
   lineage: OrchestrationV2AppThreadLineage,
@@ -1968,6 +1987,10 @@ export const OrchestrationV2ThreadShell = Schema.Struct({
   pullRequests: Schema.optional(Schema.Array(ThreadPullRequestLink)),
   /** Pull request discovered from the thread's current branch. */
   branchPullRequest: Schema.optional(Schema.NullOr(ThreadLinkedPullRequest)),
+  /** Thread on another environment this one continued from. */
+  continuedFrom: Schema.optional(Schema.NullOr(ThreadEnvironmentLink)),
+  /** Latest thread on another environment this one was continued on. */
+  continuedOn: Schema.optional(Schema.NullOr(ThreadEnvironmentLink)),
   lineage: OrchestrationV2AppThreadLineage,
   forkedFrom: Schema.NullOr(OrchestrationV2AppThread.fields.forkedFrom),
   activeProviderThreadId: Schema.NullOr(ProviderThreadId),
@@ -2877,6 +2900,9 @@ export const OrchestrationV2Command = Schema.Union([
     limitRecovery: Schema.optional(Schema.NullOr(OrchestrationV2LimitRecoveryUpdate)),
     /** Link (object) or unlink (null) a pull request (#8160); absent leaves it unchanged. */
     linkedPullRequest: Schema.optional(Schema.NullOr(ThreadLinkedPullRequest)),
+    /** Set (object) or clear (null) a cross-environment continuation link (#338). */
+    continuedFrom: Schema.optional(Schema.NullOr(ThreadEnvironmentLink)),
+    continuedOn: Schema.optional(Schema.NullOr(ThreadEnvironmentLink)),
   }),
   Schema.Struct({
     type: Schema.Literal("thread.pull-request.link"),

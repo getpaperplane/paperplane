@@ -1,4 +1,4 @@
-import { type EnvironmentId, type ScopedProjectRef } from "@getpaperplane/contracts";
+import { EnvironmentId, type ScopedProjectRef } from "@getpaperplane/contracts";
 import { ThreadHoverCard, ThreadHoverCardPopup } from "./ThreadHoverCard";
 import { CollapsibleSectionHeader } from "./ui/collapsible-section-header";
 import {
@@ -6,6 +6,7 @@ import {
   ThreadTerminalStatusButton,
 } from "./ThreadStatusIndicators";
 import { ThreadContextDragGhost } from "./chat/ThreadContextDragGhost";
+import { readContinueTargets, requestContinueThread } from "./continueThread/ContinueThreadDialog";
 import {
   dropThreadContext,
   endThreadContextDrag,
@@ -4689,12 +4690,20 @@ export default function Sidebar() {
                 titleRegeneration: supportsTitleRegeneration,
               },
               snoozePresets,
+              continueTargets: readContinueTargets(threadRef.environmentId),
             }),
             position,
           ),
         );
         if (clicked._tag === "Failure" || clicked.value === null) return;
         if (threadActionRequiresOperate(clicked.value) && !checkThreadOperations([thread])) return;
+        if (clicked.value.startsWith("continue-on:")) {
+          requestContinueThread(
+            threadRef,
+            EnvironmentId.make(clicked.value.slice("continue-on:".length)),
+          );
+          return;
+        }
         if (clicked.value?.startsWith("snooze:")) {
           const preset =
             clicked.value === "snooze:custom"

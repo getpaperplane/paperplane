@@ -96,6 +96,31 @@ describe("V2 client presentation", () => {
     expect(shell.branchPullRequest).toEqual(branchPullRequest);
   });
 
+  it("preserves continuation provenance in client state", () => {
+    const continuedFrom = {
+      environmentId: EnvironmentId.make("source-environment"),
+      environmentLabel: "Source machine",
+      threadId: v2ThreadShell.id,
+      title: "Original thread",
+      at: "2026-06-20T00:00:00.000Z",
+    };
+    const continuedOn = { ...continuedFrom, environmentId: EnvironmentId.make("next-environment") };
+    const shell = presentThreadShell(environmentId, {
+      ...v2ThreadShell,
+      continuedFrom,
+      continuedOn,
+    });
+    expect(shell.continuedFrom).toEqual(continuedFrom);
+    expect(shell.continuedOn).toEqual(continuedOn);
+    const cleared = presentThreadShell(environmentId, {
+      ...v2ThreadShell,
+      continuedFrom: null,
+      continuedOn: null,
+    });
+    expect(cleared.continuedFrom).toBeNull();
+    expect(cleared.continuedOn).toBeNull();
+  });
+
   it("presents provider errors carried by failed thread shells", () => {
     const runId = RunId.make("run-failed");
     const shell = presentThreadShell(environmentId, {

@@ -11,6 +11,7 @@ import {
   CheckpointRef,
   CommandId,
   ContextTransferId,
+  EnvironmentId,
   EventId,
   MessageId,
   NodeId,
@@ -2407,6 +2408,103 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
       assert.isNotNull(unlinkedShell);
       assert.isNull(unlinkedShell.linkedPullRequest);
     }),
+  );
+
+  it.effect(
+    "persists cross-environment continuation links through metadata changes and replay",
+    () =>
+      Effect.gen(function* () {
+        const orchestrator = yield* Orchestrator.OrchestratorV2;
+        const maintenance = yield* ProjectionMaintenance.ProjectionMaintenanceV2;
+        const threadId = ThreadId.make("runtime-layer-continuation-thread");
+        const continuedFrom = {
+          environmentId: EnvironmentId.make("source-environment"),
+          environmentLabel: "Source machine",
+          threadId: ThreadId.make("source-thread"),
+          title: "Original thread",
+          at: "2026-09-17T00:00:00.000Z",
+        };
+        const continuedOn = {
+          environmentId: EnvironmentId.make("destination-environment"),
+          environmentLabel: "Destination machine",
+          threadId: ThreadId.make("destination-thread"),
+          title: "Continued thread",
+          at: "2026-09-17T01:00:00.000Z",
+        };
+        yield* orchestrator.dispatch({
+          type: "thread.create",
+          createdBy: "user",
+          creationSource: "web",
+          commandId: CommandId.make("continuation-create"),
+          threadId,
+          projectId: ProjectId.make("continuation-project"),
+          title: "Continuation thread",
+          modelSelection,
+          runtimeMode: "full-access",
+          interactionMode: "default",
+          branch: null,
+          worktreePath: null,
+        });
+        yield* orchestrator.dispatch({
+          type: "thread.metadata.update",
+          commandId: CommandId.make("continuation-from"),
+          threadId,
+          continuedFrom,
+        });
+        yield* orchestrator.dispatch({
+          type: "thread.metadata.update",
+          commandId: CommandId.make("continuation-on"),
+          threadId,
+          continuedOn,
+        });
+        yield* orchestrator.dispatch({
+          type: "thread.metadata.update",
+          commandId: CommandId.make("continuation-rename"),
+          threadId,
+          title: "Renamed continuation thread",
+        });
+
+        const assertLinks = Effect.fnUntraced(function* (
+          expectedFrom: typeof continuedFrom | null,
+          expectedOn: typeof continuedOn | null,
+        ) {
+          const projection = yield* orchestrator.getThreadProjection(threadId);
+          assert.deepEqual(projection.thread.continuedFrom, expectedFrom);
+          assert.deepEqual(projection.thread.continuedOn, expectedOn);
+          const detailShell = ProjectionStore.threadShellFromProjection(projection);
+          assert.deepEqual(detailShell.continuedFrom, expectedFrom);
+          assert.deepEqual(detailShell.continuedOn, expectedOn);
+          const shell = yield* orchestrator.getThreadShell(threadId);
+          assert.isNotNull(shell);
+          assert.deepEqual(shell.continuedFrom, expectedFrom);
+          assert.deepEqual(shell.continuedOn, expectedOn);
+          const snapshot = yield* orchestrator.getShellSnapshot();
+          const snapshotShell = snapshot.threads.find((thread) => thread.id === threadId);
+          assert.isDefined(snapshotShell);
+          assert.deepEqual(snapshotShell.continuedFrom, expectedFrom);
+          assert.deepEqual(snapshotShell.continuedOn, expectedOn);
+        });
+        yield* assertLinks(continuedFrom, continuedOn);
+        assert.isTrue((yield* maintenance.rebuild).valid);
+        yield* assertLinks(continuedFrom, continuedOn);
+
+        yield* orchestrator.dispatch({
+          type: "thread.metadata.update",
+          commandId: CommandId.make("continuation-clear-from"),
+          threadId,
+          continuedFrom: null,
+        });
+        yield* assertLinks(null, continuedOn);
+        yield* orchestrator.dispatch({
+          type: "thread.metadata.update",
+          commandId: CommandId.make("continuation-clear-on"),
+          threadId,
+          continuedOn: null,
+        });
+        yield* assertLinks(null, null);
+        assert.isTrue((yield* maintenance.rebuild).valid);
+        yield* assertLinks(null, null);
+      }),
   );
 
   it.effect("keeps the branch pull request when linking another pull request", () =>

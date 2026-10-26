@@ -754,6 +754,8 @@ function threadDetail(
     runtimeMode: projection.thread.runtimeMode,
     interactionMode: projection.thread.interactionMode,
     linkedPullRequest: projection.thread.linkedPullRequest ?? null,
+    continuedFrom: projection.thread.continuedFrom ?? null,
+    continuedOn: projection.thread.continuedOn ?? null,
     titleRegeneration:
       projection.thread.titleRegeneration === undefined ||
       projection.thread.titleRegeneration === null

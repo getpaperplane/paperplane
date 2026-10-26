@@ -196,6 +196,8 @@ export const ExecutionEnvironmentCapabilities = Schema.Struct({
   threadVisitedTracking: Schema.optionalKey(Schema.Boolean),
   /** Server persists a pull request reference on thread.meta.update. */
   threadPullRequestLinking: Schema.optionalKey(Schema.Boolean),
+  /** Server persists continuedFrom/continuedOn links on thread.metadata.update (#338). */
+  threadContinuation: Schema.optionalKey(Schema.Boolean),
   /** Server resolves message delivery and model-selection context and validates
       identified rollback readiness. Clients retain projection-based command
       shaping and validation when this is absent. */

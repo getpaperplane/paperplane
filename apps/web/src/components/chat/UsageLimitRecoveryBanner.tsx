@@ -4,11 +4,13 @@ import {
   type RunId,
 } from "@getpaperplane/contracts";
 import { GaugeIcon } from "lucide-react";
-import { useEffect, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { Button } from "../ui/button";
 import type { ComposerBannerStackItem } from "./ComposerBannerStack";
 
 type RecoveryProps = {
+  /** Moves the work to another environment instead of waiting for the reset. */
+  continueAction?: ReactNode;
   runId: RunId;
   resetAt: string | null;
   stoppedAt: string;
@@ -16,6 +18,17 @@ type RecoveryProps = {
   recovery: OrchestrationV2LimitRecovery | null;
   onChange: (recovery: OrchestrationV2LimitRecoveryUpdate) => Promise<void>;
 };
+
+// Short enough to stay visible next to the banner's actions: "1:16 PM" today, "Tue 9:00 AM" otherwise.
+function formatResetTime(resetAt: string): string {
+  const reset = new Date(resetAt);
+  const sameDay = reset.toDateString() === new Date().toDateString();
+  return reset.toLocaleString(undefined, {
+    ...(sameDay ? {} : { weekday: "short" }),
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
 
 export function usageLimitRecoveryBannerItem(props: RecoveryProps): ComposerBannerStackItem {
   const { runId, resetAt, stoppedAt } = props;
@@ -27,13 +40,25 @@ export function usageLimitRecoveryBannerItem(props: RecoveryProps): ComposerBann
     icon: <GaugeIcon />,
     title: "Usage limit reached",
     description: resetAt
-      ? `Resets ${new Date(resetAt).toLocaleString()}`
+      ? `Resets ${formatResetTime(resetAt)}`
       : "Reset time unavailable; retry manually",
-    actions: canSchedule ? <RecoveryActions key={`${runId}:${resetAt}`} {...props} /> : null,
+    // Waiting in place comes first; moving the work elsewhere is the alternative.
+    actions: canSchedule ? (
+      <RecoveryActions key={`${runId}:${resetAt}`} {...props} />
+    ) : (
+      (props.continueAction ?? null)
+    ),
   };
 }
 
-function RecoveryActions({ runId, resetAt, recovery, snoozedUntil, onChange }: RecoveryProps) {
+function RecoveryActions({
+  continueAction,
+  runId,
+  resetAt,
+  recovery,
+  snoozedUntil,
+  onChange,
+}: RecoveryProps) {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [nowMs, setNowMs] = useState(() => Date.now());
@@ -74,7 +99,7 @@ function RecoveryActions({ runId, resetAt, recovery, snoozedUntil, onChange }: R
     setPending(false);
   }
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="flex flex-wrap items-center justify-end gap-1">
       <Button size="xs" variant="ghost" disabled={pending} onClick={() => void toggle("resume")}>
         {pending ? "Saving..." : scheduled ? "Cancel auto-resume" : "Resume at reset"}
       </Button>
@@ -88,6 +113,7 @@ function RecoveryActions({ runId, resetAt, recovery, snoozedUntil, onChange }: R
           {pending ? "Saving..." : "Snooze until reset"}
         </Button>
       ) : null}
+      {continueAction}
       {error ? (
         <p role="alert" className="basis-full text-xs text-destructive">
           {error}

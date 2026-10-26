@@ -721,6 +721,48 @@ describe("V2 environment commands", () => {
       }).pipe(Effect.provide(layerTestCrypto)),
   );
 
+  it.effect("forwards continuation-only metadata updates and explicit clears", () =>
+    Effect.gen(function* () {
+      const commands: OrchestrationV2Command[] = [];
+      const supervisor = yield* makeSupervisor({ commands, projects: [] });
+      const continuedFrom = {
+        environmentId: EnvironmentId.make("source-environment"),
+        environmentLabel: "Source machine",
+        threadId: v2ThreadId,
+        title: "Original thread",
+        at: "2026-06-20T00:00:00.000Z",
+      };
+      const provide = Effect.provideService(
+        EnvironmentSupervisor.EnvironmentSupervisor,
+        supervisor,
+      );
+      yield* updateThreadMetadata({
+        commandId: CommandId.make("continuation-set"),
+        threadId: v2ThreadId,
+        continuedFrom,
+      }).pipe(provide);
+      yield* updateThreadMetadata({
+        commandId: CommandId.make("continuation-clear"),
+        threadId: v2ThreadId,
+        continuedOn: null,
+      }).pipe(provide);
+      expect(commands).toEqual([
+        {
+          type: "thread.metadata.update",
+          commandId: "continuation-set",
+          threadId: v2ThreadId,
+          continuedFrom,
+        },
+        {
+          type: "thread.metadata.update",
+          commandId: "continuation-clear",
+          threadId: v2ThreadId,
+          continuedOn: null,
+        },
+      ]);
+    }).pipe(Effect.provide(layerTestCrypto)),
+  );
+
   it.effect("delegates model selection to the server without fetching the full projection", () =>
     Effect.gen(function* () {
       const commands: OrchestrationV2Command[] = [];

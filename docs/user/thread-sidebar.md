@@ -179,6 +179,26 @@ On web and desktop, right-click a pull request link in a thread and choose
 same link to return to the branch PR, if one exists.
 The linked pull request participates in automatic settlement.
 
+## Continue on another environment
+
+When you pair with more than one machine, you can move a thread's work to another one, for
+example when one machine runs out of provider quota. On web and desktop, open the thread menu
+(in the header or by right-clicking the thread in the sidebar) and choose **Continue on**, or
+search the command palette for "continue". A thread that stops on a usage limit also offers
+a **Continue on** button in its notice.
+
+Pick the environment, the project there, and the model, then confirm. If the thread's branch
+has uncommitted or unpushed work, Paperplane can commit and push it first, without using the
+agent. The new thread checks out the pushed branch in a new worktree, receives this thread's
+history as an attachment, and starts by checking where the work left off. Diffs, checkpoints,
+and the provider session stay on the original machine.
+
+Both threads link to each other when both environments are up to date. The links appear
+under **Continuation** in the thread details panel; select one to open the other thread when
+its environment is connected. Messages you send to the original thread afterwards start a
+separate conversation; remove its link when you no longer need it. The thread must be stopped
+first, and the target environment must be connected and allow you to start threads.
+
 ## Find and reference work
 
 On web and desktop, open the command palette with `Cmd/Ctrl+K` to search threads

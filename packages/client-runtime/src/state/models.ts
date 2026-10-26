@@ -1,6 +1,7 @@
 import { backgroundWorkHoldsCompletion } from "@getpaperplane/shared/orchestrationV2PendingBackgroundWork";
 import { threadPullRequestsOf } from "@getpaperplane/shared/threadPullRequests";
 import type {
+  ThreadEnvironmentLink,
   ThreadLinkedPullRequest,
   EnvironmentId,
   MessageId,
@@ -141,6 +142,8 @@ export interface EnvironmentThreadShell {
   readonly activeOrderKey: string | null;
   readonly pullRequests: ReadonlyArray<import("@getpaperplane/contracts").ThreadPullRequestLink>;
   readonly linkedPullRequest?: ThreadLinkedPullRequest | null;
+  readonly continuedFrom?: ThreadEnvironmentLink | null;
+  readonly continuedOn?: ThreadEnvironmentLink | null;
   readonly branchPullRequest?: ThreadLinkedPullRequest | null;
   /**
    * Server-tracked visited watermark. `undefined` means the environment's
@@ -252,6 +255,8 @@ export function presentThreadShell(
     worktreePath: thread.worktreePath,
     pullRequests: threadPullRequestsOf(thread),
     linkedPullRequest: thread.linkedPullRequest ?? null,
+    continuedFrom: thread.continuedFrom ?? null,
+    continuedOn: thread.continuedOn ?? null,
     branchPullRequest: thread.branchPullRequest ?? null,
     lineage: thread.lineage,
     forkedFrom: thread.forkedFrom,
