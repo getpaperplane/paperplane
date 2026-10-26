@@ -121,7 +121,7 @@ import {
   promptCacheCompactionDueAt,
   type CompactionReason,
 } from "@getpaperplane/client-runtime/compaction";
-import { useCompactionDue } from "../features/threads/use-compaction-due";
+import { useCompactionDue } from "./use-compaction-due";
 
 const EMPTY_QUEUE_WORKFLOW_ATOM = Atom.make<null>(null).pipe(
   Atom.withLabel("mobile-thread-queue-workflow:empty"),
