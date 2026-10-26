@@ -1,6 +1,7 @@
 import { memo } from "react";
 import { type PendingApproval } from "../../session-logic";
 import { cn } from "~/lib/utils";
+import { PostmarkMark } from "../brand/PaperplaneMarks";
 
 interface ComposerPendingApprovalPanelProps {
   approval: PendingApproval;
@@ -38,9 +39,13 @@ export const ComposerPendingApprovalPanel = memo(function ComposerPendingApprova
   return (
     <span
       aria-label={fallbackLabel}
-      className={cn("flex min-w-0 flex-1 flex-col items-start gap-1", className)}
+      className={cn("relative isolate flex min-w-0 flex-1 flex-col items-start gap-1", className)}
       role="group"
     >
+      <PostmarkMark
+        key={approval.requestId}
+        className="paperplane-postmark pointer-events-none absolute -top-1 right-2 -z-10 h-12 w-16 text-warning/25"
+      />
       <span className="flex w-full min-w-0 items-center gap-2 text-2xs text-muted-foreground">
         <span className="shrink-0 font-medium text-warning">{fallbackLabel}</span>
         {approval.appName ? <span className="min-w-0 truncate">{approval.appName}</span> : null}

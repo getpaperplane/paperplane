@@ -1,4 +1,5 @@
 import type { DesktopBridge } from "@getpaperplane/contracts";
+import { revealThemeChange } from "~/brand/themeReveal";
 import { safeErrorLogAttributes } from "@getpaperplane/client-runtime/errors";
 import * as Schema from "effect/Schema";
 import { useCallback, useEffect, useSyncExternalStore } from "react";
@@ -553,8 +554,10 @@ export function useTheme() {
       });
       return false;
     }
-    applyTheme(next, { suppressTransitions: true });
-    emitChange();
+    revealThemeChange(() => {
+      applyTheme(next, { suppressTransitions: true });
+      emitChange();
+    });
     return true;
   }, []);
 
@@ -578,8 +581,10 @@ export function useTheme() {
       return false;
     }
     themeStorageReadFailure = null;
-    applyTheme(getStored(), { suppressTransitions: true });
-    emitChange();
+    revealThemeChange(() => {
+      applyTheme(getStored(), { suppressTransitions: true });
+      emitChange();
+    });
     return true;
   }, []);
 
@@ -622,8 +627,10 @@ export function useTheme() {
         });
         return false;
       }
-      applyTheme(getStored(), { suppressTransitions: true });
-      emitChange();
+      revealThemeChange(() => {
+        applyTheme(getStored(), { suppressTransitions: true });
+        emitChange();
+      });
       return true;
     },
     [],
@@ -646,8 +653,10 @@ export function useTheme() {
       });
       return false;
     }
-    applyTheme(getStored(), { suppressTransitions: true });
-    emitChange();
+    revealThemeChange(() => {
+      applyTheme(getStored(), { suppressTransitions: true });
+      emitChange();
+    });
     return true;
   }, []);
 

@@ -1,0 +1,215 @@
+/*
+ * Paperplane brand layer.
+ *
+ * Small decorations on top of existing components, plus the send-flight and
+ * status motion. Nothing here changes layout: decorations are pseudo-elements
+ * or absolutely positioned marks, and motion only touches transform, opacity
+ * and clip-path. Colours come from theme tokens, so every theme wears them.
+ * Remove this import from index.css to fall back to the plain look.
+ */
+
+:root {
+  --paperplane-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --paperplane-fold: 14px;
+  --paperplane-airmail-red: #b9382a;
+  --paperplane-airmail-blue: var(--primary);
+}
+
+.dark {
+  --paperplane-airmail-red: #f08473;
+  --paperplane-airmail-blue: #8eaef7;
+}
+
+/* ---- Send flight --------------------------------------------------------- */
+
+.paperplane-flyer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 60;
+  pointer-events: none;
+  color: var(--primary);
+  will-change: transform, opacity;
+}
+
+/* ---- User message: a sheet with one folded corner ------------------------ */
+
+[data-paperplane-bubble] {
+  /* Cut the top-right corner; the triangle below is the paper folded over. */
+  border-start-end-radius: 0;
+  clip-path: polygon(
+    0 0,
+    calc(100% - var(--paperplane-fold)) 0,
+    100% var(--paperplane-fold),
+    100% 100%,
+    0 100%
+  );
+}
+
+[data-paperplane-bubble]::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: var(--paperplane-fold);
+  height: var(--paperplane-fold);
+  pointer-events: none;
+  border-end-start-radius: 3px;
+  background: linear-gradient(
+    225deg,
+    transparent 50%,
+    color-mix(in srgb, var(--message-foreground) 16%, var(--message-surface)) 50%
+  );
+}
+
+/* ---- Composer: airmail edge ---------------------------------------------- */
+
+[data-chat-composer-main-surface="true"]::before {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  z-index: 1;
+  pointer-events: none;
+  border-radius: inherit;
+  background: repeating-linear-gradient(
+      -45deg,
+      var(--paperplane-airmail-red) 0 7px,
+      transparent 7px 11px,
+      var(--paperplane-airmail-blue) 11px 18px,
+      transparent 18px 22px
+    )
+    top / 100% 2px no-repeat;
+  opacity: 0.55;
+  transition: opacity 200ms ease;
+}
+
+[data-chat-composer-main-surface="true"]:focus-within::before {
+  opacity: 0.85;
+}
+
+/* ---- Model picker: a postage stamp --------------------------------------- */
+
+[data-chat-composer-main-surface="true"] [data-chat-provider-model-picker="true"] {
+  border-radius: 3px;
+  padding-block: 2px;
+  background-color: color-mix(in srgb, var(--primary) 8%, transparent);
+  /* Union of a solid inner panel and a dot grid centred on the edges = perforations. */
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    radial-gradient(circle, transparent 1.1px, #000 1.35px) -2.5px -2.5px / 5px 5px;
+  mask-composite: add;
+  transition: background-color 150ms ease;
+}
+
+[data-chat-composer-main-surface="true"] [data-chat-provider-model-picker="true"]:hover,
+[data-chat-composer-main-surface="true"] [data-chat-provider-model-picker="true"][data-popup-open] {
+  background-color: color-mix(in srgb, var(--primary) 14%, transparent);
+}
+
+/* ---- Sidebar header: one crease and a flight path ------------------------ */
+
+.paperplane-crease {
+  color: var(--sidebar-muted-foreground);
+  overflow: hidden;
+  background: linear-gradient(
+    to bottom right,
+    transparent calc(50% - 0.5px),
+    color-mix(in srgb, var(--sidebar-foreground) 7%, transparent) 50%,
+    transparent calc(50% + 0.5px)
+  );
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 40%);
+  mask-image: linear-gradient(to right, transparent, #000 40%);
+}
+
+.paperplane-crease-trail {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  width: 96px;
+  height: 32px;
+  translate: 0 -50%;
+  opacity: 0.55;
+}
+
+/* ---- Approval: a postmark lands on the request --------------------------- */
+
+.paperplane-postmark {
+  animation: paperplane-postmark 300ms var(--paperplane-ease-out) both;
+}
+
+@keyframes paperplane-postmark {
+  from {
+    opacity: 0;
+    transform: rotate(-14deg) scale(1.35);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(-14deg) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .paperplane-postmark {
+    animation: none;
+  }
+}
+
+/* ---- Paper grain on the stock theme -------------------------------------- */
+
+/* A touch more tooth than the shared grain, so sheets read as paper. Same
+   static tile, so it costs nothing per frame. */
+html:not([data-theme-id]),
+html[data-theme-id=""] {
+  --surface-grain: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.35 0 0 0 0 0.3 0 0 0 0 0.2 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+  --surface-grain-size: 200px 200px;
+}
+
+/* ---- Streaming: words fade in as they arrive ------------------------------ */
+
+/* Only the growing tail block wraps its words (rehypeStreamWords), so this is
+   a bounded number of one-shot opacity transitions, never a loop. */
+@media (prefers-reduced-motion: no-preference) {
+  .chat-markdown[data-streaming] .stream-word {
+    transition: opacity 360ms ease-out;
+
+    @starting-style {
+      opacity: 0;
+    }
+  }
+}
+
+/* ---- Theme change: circular reveal (brand/themeReveal.ts) ----------------- */
+
+html[data-theme-reveal]::view-transition-old(root),
+html[data-theme-reveal]::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+/* ---- Turn end and empty state --------------------------------------------- */
+
+@media (prefers-reduced-motion: no-preference) {
+  /* The "Worked for" fold settles in where the working row was. Gated on the
+     short window after a turn ends, so opening history never replays it. */
+  [data-turn-settling] .paperplane-settle-in {
+    transition:
+      opacity 320ms ease-out,
+      translate 320ms var(--paperplane-ease-out);
+
+    @starting-style {
+      opacity: 0;
+      translate: 0 4px;
+    }
+  }
+
+  .paperplane-empty-glide {
+    animation: paperplane-empty-glide 640ms var(--paperplane-ease-out) both;
+  }
+}
+
+@keyframes paperplane-empty-glide {
+  from {
+    opacity: 0;
+    transform: translate(-24px, 12px) rotate(-10deg);
+  }
+}

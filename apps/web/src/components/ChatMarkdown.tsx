@@ -1,4 +1,5 @@
 import { MarkdownFindContext, useFindRevealRef } from "./chat/markdownFindContext";
+import { rehypeStreamWords } from "~/brand/rehypeStreamWords";
 import {
   buildFileLinkParentSuffixByPath,
   fileLinkLabel,
@@ -3482,6 +3483,8 @@ interface ChatMarkdownBlockProps {
   readonly urlTransform: ReactMarkdownOptions["urlTransform"];
   /** Present when the message renders in blocks; a document renders in one. */
   readonly headingIds?: HeadingIdRegistry | undefined;
+  /** The growing tail of a streaming reply: its words fade in as they arrive. */
+  readonly streamingTail?: boolean;
 }
 
 /** One independently parsed slice of a message. Finished blocks of a streaming
@@ -3492,16 +3495,17 @@ const ChatMarkdownBlock = memo(function ChatMarkdownBlock({
   parseRawHtml,
   urlTransform,
   headingIds,
+  streamingTail = false,
 }: ChatMarkdownBlockProps) {
-  const rehypePlugins = useMemo(
-    () =>
+  const rehypePlugins = useMemo(() => {
+    const plugins =
       headingIds === undefined
         ? parseRawHtml
           ? CHAT_MARKDOWN_RENDER_REHYPE_PLUGINS
           : CHAT_MARKDOWN_LITERAL_HTML_REHYPE_PLUGINS
-        : chatMarkdownRehypePlugins(parseRawHtml, headingIds, block.offset),
-    [block.offset, headingIds, parseRawHtml],
-  );
+        : chatMarkdownRehypePlugins(parseRawHtml, headingIds, block.offset);
+    return streamingTail ? [...plugins, rehypeStreamWords] : plugins;
+  }, [block.offset, headingIds, parseRawHtml, streamingTail]);
   // react-markdown converts unparsed HTML nodes to text when skipHtml is false.
   // Keep that behavior explicit because literal mode depends on escaping the
   // complete source token instead of dropping it from the rendered message.
@@ -3581,6 +3585,7 @@ function ChatMarkdown({
       parseRawHtml={parseRawHtml}
       urlTransform={markdownUrlTransform}
       headingIds={headingIds}
+      streamingTail={componentState.isStreaming && block === blocks?.tail}
     />
   );
 

@@ -1,4 +1,5 @@
 import { formatProviderSkillDisplayName } from "@getpaperplane/shared/inlineSkills";
+import { launchPaperplaneFlight } from "~/brand/paperplaneFlight";
 import { useComposerTypingGuard } from "./useComposerTypingGuard";
 import { DESKTOP_PASTE_AS_TEXT_EVENT } from "../../lib/desktopPasteAsText";
 import { runtimeModeConfig, runtimeModeOptions as runtimeModes } from "./runtimeModeConfig";
@@ -4284,6 +4285,7 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
     });
     setComposerSubmissionError(submission.validationMessage);
     if (!submission.didDispatch) return;
+    if (!activePendingProgress) launchPaperplaneFlight(composerSurfaceRef.current);
     onTypingGuardSend();
     if (shouldBlurMobileComposerOnSubmit()) {
       blurMobileComposerAfterSend();

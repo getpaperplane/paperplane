@@ -228,7 +228,7 @@ describe("VS Code theme import", () => {
       type: "dark",
       colors: {
         "editor.background": "#121212",
-        "editorWidget.background": "#346bf1",
+        "editorWidget.background": "#8eaef7",
       },
     });
     expect(asHex(theme.colors.focus)).toBe("#ffffff");

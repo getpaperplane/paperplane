@@ -603,9 +603,13 @@ describe("ChatMarkdown streamed blocks", () => {
           />,
         );
       });
-      expect(streamed.firstElementChild?.innerHTML, JSON.stringify(text)).toBe(
-        reference.firstElementChild?.innerHTML,
+      // The streaming tail wraps each word for its fade-in; the text and
+      // structure around those spans must still match.
+      const streamedHtml = streamed.firstElementChild?.innerHTML.replaceAll(
+        /<span class="stream-word">(.*?)<\/span>/g,
+        "$1",
       );
+      expect(streamedHtml, JSON.stringify(text)).toBe(reference.firstElementChild?.innerHTML);
     };
     try {
       for (const end of prefixes(source)) await render(source.slice(0, end), true);
