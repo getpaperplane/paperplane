@@ -4,6 +4,7 @@ import { threadPullRequestLinkMode } from "@getpaperplane/client-runtime/thread-
 import { visibleThreadPullRequests } from "@getpaperplane/shared/threadPullRequests";
 
 import { scopeProjectRef, scopeThreadRef } from "@getpaperplane/client-runtime/environment";
+import { threadRuntimeCanArchive } from "@getpaperplane/client-runtime/state/models";
 import {
   canCreateProjectInEnvironment,
   getCloneDestinationBrowsePath,
@@ -57,6 +58,7 @@ import {
 import { useLocation, useNavigate, useParams } from "@tanstack/react-router";
 import * as Option from "effect/Option";
 import {
+  ArrowRightLeftIcon,
   ArrowLeftIcon,
   ChartNoAxesColumnIcon,
   CheckIcon,
@@ -79,6 +81,7 @@ import {
   TextSearchIcon,
 } from "lucide-react";
 import { requestThreadFindOpen } from "./chat/threadFindActionBus";
+import { requestContinueThread, useContinueTargets } from "./continueThread/ContinueThreadDialog";
 import {
   useCallback,
   useDeferredValue,
@@ -647,6 +650,7 @@ function OpenCommandPaletteDialog(props: {
   const availableSettingsSearchItems = useAvailableSettingsSearchItems();
   const { activeDraftThread, activeThread, defaultProjectRef, handleNewThread } =
     useHandleNewThread();
+  const continueTargets = useContinueTargets(activeThread?.environmentId ?? null);
   const paletteRouteTarget = useParams({
     strict: false,
     select: (params) => resolveThreadRouteTarget(params),
@@ -1868,6 +1872,28 @@ function OpenCommandPaletteDialog(props: {
       shortcutCommand: "chat.newWithoutProject",
       run: () => startScratchThread(scratchTargetEnvironmentId),
     });
+  }
+
+  // A running thread is still producing the history that would be copied.
+  if (activeThread !== null && threadRuntimeCanArchive(activeThread.runtime)) {
+    const sourceRef = scopeThreadRef(activeThread.environmentId, activeThread.id);
+    for (const target of continueTargets) {
+      if (!target.connected) continue;
+      actionItems.push({
+        kind: "action",
+        value: `action:continue-on:${target.environmentId}`,
+        searchTerms: ["continue", "move", "hand off", "switch", "machine", target.label],
+        title: (
+          <>
+            Continue thread on <span className="font-semibold">{target.label}</span>
+          </>
+        ),
+        icon: <ArrowRightLeftIcon className={ITEM_ICON_CLASS} />,
+        run: async () => {
+          requestContinueThread(sourceRef, target.environmentId);
+        },
+      });
+    }
   }
 
   if (activeThreadId && supportsThreadFind) {

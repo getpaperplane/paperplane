@@ -8,6 +8,8 @@ import type { SnoozePreset } from "@getpaperplane/client-runtime/state/thread-se
  */
 export type ThreadActionMenuId =
   | "new-thread-on-branch"
+  | "continue-on"
+  | `continue-on:${string}`
   | "filter-by-project"
   | "project-settings"
   | "pin"
@@ -99,10 +101,21 @@ export interface ThreadActionMenuState {
     readonly titleRegeneration: boolean;
   };
   readonly snoozePresets: ReadonlyArray<SnoozePreset>;
+  /**
+   * Other environments the thread can continue on (offline ones disabled).
+   * Empty or absent hides the item.
+   */
+  readonly continueTargets?: ReadonlyArray<{
+    readonly environmentId: string;
+    readonly label: string;
+    readonly connected: boolean;
+  }>;
 }
 
 /** Local navigation, read markers, and copying remain available to read-only clients. */
 export function threadActionRequiresOperate(action: ThreadActionMenuId): boolean {
+  // Continuing writes to the target environment; the dialog checks each grant it uses.
+  if (action === "continue-on" || action.startsWith("continue-on:")) return false;
   return ![
     "new-thread-on-branch",
     "project-settings",
@@ -129,6 +142,23 @@ export function buildThreadActionMenuItems(
             id: "new-thread-on-branch" as const,
             label: `New thread on ${state.branch}`,
             icon: "message-square-plus",
+          },
+        ]
+      : []),
+    ...(state.continueTargets && state.continueTargets.length > 0
+      ? [
+          {
+            id: "continue-on" as const,
+            label: "Continue on",
+            icon: "arrow-right-left",
+            // A running thread is still producing the history that would be copied.
+            disabled: state.isRunning,
+            children: state.continueTargets.map((target) => ({
+              id: `continue-on:${target.environmentId}` as const,
+              label: target.connected ? target.label : `${target.label} (offline)`,
+              icon: "laptop",
+              disabled: state.isRunning || !target.connected,
+            })),
           },
         ]
       : []),

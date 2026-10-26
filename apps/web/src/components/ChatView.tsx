@@ -1,6 +1,7 @@
 import { ThreadFind, ThreadFindCanvas, type ThreadFindControls } from "./chat/ThreadFindProvider";
 import { THREAD_FIND_BAR_RESERVED_HEIGHT } from "./chat/ThreadFindBar";
 import { usageLimitRecoveryBannerItem } from "./chat/UsageLimitRecoveryBanner";
+import { ContinueOnBannerButton, useContinueTargets } from "./continueThread/ContinueThreadDialog";
 import {
   resolveBackgroundDraftWorkspaceOptions,
   resolveDraftHeroState,
@@ -7410,11 +7411,24 @@ export default function ChatView(props: ChatViewProps) {
       }),
     [feedbackSubmissions, routeThreadKey],
   );
+  const continueTargets = useContinueTargets(isServerThread ? environmentId : null);
+  const bannerContinueTarget = continueTargets.find((target) => target.connected) ?? null;
   const limitRecoveryBanner =
     serverRuntime?.status === "failed" &&
     serverRuntime.lastErrorClass === "usage_limit" &&
     activeThreadShell?.latestRun
       ? usageLimitRecoveryBannerItem({
+          ...(bannerContinueTarget && activeThreadRef
+            ? {
+                continueAction: (
+                  <ContinueOnBannerButton
+                    threadRef={activeThreadRef}
+                    target={bannerContinueTarget}
+                    compact={serverRuntime.usageLimitResetAt != null}
+                  />
+                ),
+              }
+            : {}),
           runId: activeThreadShell.latestRun.runId,
           resetAt: serverRuntime.usageLimitResetAt ?? null,
           stoppedAt: activeThreadShell.latestRun.completedAt ?? activeThreadShell.updatedAt,

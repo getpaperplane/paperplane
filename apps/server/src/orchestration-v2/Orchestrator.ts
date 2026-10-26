@@ -3222,6 +3222,10 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
                 : {}),
             ...(command.branch === undefined ? {} : { branch: command.branch }),
             ...(command.worktreePath === undefined ? {} : { worktreePath: command.worktreePath }),
+            ...(command.continuedFrom === undefined
+              ? {}
+              : { continuedFrom: command.continuedFrom }),
+            ...(command.continuedOn === undefined ? {} : { continuedOn: command.continuedOn }),
             ...(command.linkedPullRequest === undefined
               ? {}
               : {

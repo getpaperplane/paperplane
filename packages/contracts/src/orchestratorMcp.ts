@@ -30,6 +30,7 @@ import {
   OrchestrationV2CreationSource,
   OrchestrationV2RunStatus,
   OrchestrationV2TurnItemStatus,
+  ThreadEnvironmentLink,
 } from "./orchestrationV2.ts";
 import {
   ProviderOptionDescriptor,
@@ -378,6 +379,8 @@ export const OrchestratorMcpThreadDetail = Schema.Struct({
   runtimeMode: RuntimeMode,
   interactionMode: ProviderInteractionMode,
   linkedPullRequest: Schema.NullOr(ThreadLinkedPullRequest),
+  continuedFrom: Schema.optional(Schema.NullOr(ThreadEnvironmentLink)),
+  continuedOn: Schema.optional(Schema.NullOr(ThreadEnvironmentLink)),
   titleRegeneration: Schema.NullOr(ThreadTitleRegeneration),
   branch: Schema.NullOr(Schema.String),
   worktreePath: Schema.NullOr(Schema.String),

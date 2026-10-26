@@ -9,12 +9,17 @@ import {
 import { canSnooze, effectiveSnoozed } from "@getpaperplane/client-runtime/state/thread-settled";
 import {
   AuthOrchestrationOperateScope,
+  EnvironmentId,
   type ScopedThreadRef,
   type ThreadId,
 } from "@getpaperplane/contracts";
 import { useRouter } from "@tanstack/react-router";
 import { useCallback, useMemo } from "react";
 
+import {
+  readContinueTargets,
+  requestContinueThread,
+} from "../components/continueThread/ContinueThreadDialog";
 import { resolveSnoozePresets } from "../components/Sidebar.snooze";
 import {
   buildThreadActionMenuItems,
@@ -160,6 +165,7 @@ export function useThreadActionMenu(input: {
           isRunning: !threadRuntimeCanArchive(thread.runtime),
           supports,
           snoozePresets,
+          continueTargets: readContinueTargets(threadRef.environmentId),
         });
         const clicked = await settlePromise(() => api.contextMenu.show(items, position));
         if (clicked._tag === "Failure" || clicked.value === null) return;
@@ -172,6 +178,10 @@ export function useThreadActionMenu(input: {
             "Thread action unavailable",
             new Error("This connection cannot change threads."),
           );
+          return;
+        }
+        if (action.startsWith("continue-on:")) {
+          requestContinueThread(threadRef, EnvironmentId.make(action.slice("continue-on:".length)));
           return;
         }
         if (action.startsWith("snooze:")) {

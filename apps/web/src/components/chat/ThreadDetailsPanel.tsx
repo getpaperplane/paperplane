@@ -22,6 +22,7 @@ import { ThreadDetailsSection } from "./ThreadDetailsSection";
 import { ThreadAutomationsPanel } from "./ThreadAutomationsPanel";
 import { ThreadRelationshipsPanel } from "./ThreadRelationshipsControl";
 import { PiExtensionStatus } from "./PiExtensionStatus";
+import { ThreadContinuationPanel } from "../continueThread/ContinueThreadLinks";
 
 const GitActionsControl = memo(BaseGitActionsControl);
 
@@ -193,6 +194,13 @@ export const ThreadDetailsPanel = memo(function ThreadDetailsPanel(props: Thread
 
           {density === "full" && !props.draftId ? (
             <ThreadAutomationsPanel environmentId={props.environmentId} threadId={props.threadId} />
+          ) : null}
+
+          {density === "full" && !props.draftId ? (
+            <ThreadContinuationPanel
+              environmentId={props.environmentId}
+              threadId={props.threadId}
+            />
           ) : null}
 
           {density === "full" && !props.draftId ? (
