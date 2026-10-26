@@ -1076,6 +1076,9 @@ function ThreadRouteContent(
           serverConfig={serverConfig}
           onStopThread={awaitingBootstrapTurn ? handleCancelWorktreeSetup : handleStopThread}
           onSendMessage={composer.onSendMessage}
+          compactionReason={composer.compactionReason}
+          keepFullHistory={composer.keepFullHistory}
+          onToggleKeepFullHistory={composer.onToggleKeepFullHistory}
           onReconnectEnvironment={handleReconnectEnvironment}
           canSwitchThreadProvider={composer.canSwitchThreadProvider}
           onUpdateThreadModelSelection={composer.onUpdateModelSelection}

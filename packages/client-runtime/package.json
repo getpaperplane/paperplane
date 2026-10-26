@@ -3,6 +3,10 @@
   "private": true,
   "type": "module",
   "exports": {
+    "./compaction": {
+      "types": "./src/compaction.ts",
+      "default": "./src/compaction.ts"
+    },
     "./project-config": {
       "types": "./src/projectConfig.ts",
       "default": "./src/projectConfig.ts"

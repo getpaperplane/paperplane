@@ -85,6 +85,9 @@ export function deriveLatestContextWindowSnapshot(
       durationMs: null,
       compactsAutomatically: true,
       autoCompactThreshold: null,
+      contextModel: null,
+      promptCacheTtlMs: liveUsage.promptCacheTtlMs ?? null,
+      promptCacheExpiresAt: null,
       cost: null,
       updatedAt: liveUsage.updatedAt,
     };
@@ -138,6 +141,9 @@ export function deriveLatestContextWindowSnapshot(
       compactsAutomatically: providerUsage.compactsAutomatically ?? null,
       cost: providerUsage.cost ?? null,
       autoCompactThreshold: providerUsage.autoCompactThreshold ?? null,
+      contextModel: providerUsage.contextModel ?? null,
+      promptCacheTtlMs: providerUsage.promptCacheTtlMs ?? null,
+      promptCacheExpiresAt: providerUsage.promptCacheExpiresAt ?? null,
       updatedAt: DateTime.formatIso(providerUsageUpdatedAt),
     };
   }
@@ -180,6 +186,9 @@ export function deriveLatestContextWindowSnapshot(
       durationMs: null,
       compactsAutomatically: true,
       autoCompactThreshold: null,
+      contextModel: null,
+      promptCacheTtlMs: null,
+      promptCacheExpiresAt: null,
       cost: null,
       updatedAt: DateTime.formatIso(payload.startedAt ?? payload.updatedAt),
     };

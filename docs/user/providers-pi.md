@@ -18,6 +18,28 @@ Use the model and reasoning pickers to choose capabilities reported by Pi. If an
 
 Pi can delegate work through Paperplane's tools, including tasks that use other providers. Ask the agent to delegate a task and specify the provider or model when needed.
 
+## Compact before sending
+
+Paperplane offers **Compact** when a Pi conversation approaches its model's compaction threshold or a large conversation's prompt cache may have expired. The next send summarizes older history first. Turn the offer off to keep the full history for that send. Pi's automatic compaction remains enabled according to your Pi settings.
+
+Cache expiry is an estimate based on the request's retention and successful cache warm-ups. For a custom provider, declare its published cache lifetimes in seconds in `models.json`, alongside its existing authentication configuration in `auth.json`. Add `promptCache` to the model definition or its `modelOverrides` entry:
+
+```json
+{
+  "providers": {
+    "my-provider": {
+      "modelOverrides": {
+        "my-model": {
+          "promptCache": { "short": 300, "long": 3600 }
+        }
+      }
+    }
+  }
+}
+```
+
+Use lifetimes supported by your endpoint. Unknown lifetimes do not produce cache-expiry offers. Context-pressure offers still work without a cache lifetime.
+
 ## Session recovery
 
 Paperplane saves each Pi session's identity and absolute file location on the server. Sessions remain recoverable when a thread's working directory changes, provided the saved file remains accessible. Older sessions without a saved file location use Pi's working-directory lookup.

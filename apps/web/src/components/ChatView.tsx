@@ -477,10 +477,12 @@ import { LiveMinuteText } from "./LiveMinuteText";
 import { formatRelativeTimeLabel, formatRelativeTimeUntilLabel } from "../timestampFormat";
 import { ComposerSurface } from "./chat/ComposerSurface";
 import { resolveThreadSyncPhase } from "../threadSync";
+import { hasAvailableCompactionProvider } from "./chat/ContextWindowMeter.logic";
 import {
-  hasAvailableCompactionProvider,
-  resumeCompactionDueAtMs,
-} from "./chat/ContextWindowMeter.logic";
+  hasContextPressure,
+  promptCacheCompactionDueAt,
+  type CompactionReason,
+} from "@getpaperplane/client-runtime/compaction";
 import {
   DRAFT_HERO_TRANSITION_ANIMATION_ID,
   DRAFT_HERO_TRANSITION_EASING,
@@ -7323,30 +7325,48 @@ export default function ChatView(props: ChatViewProps) {
           ? "Compaction is unavailable for this provider"
           : "Compacting is unavailable right now"
     : null;
+  const compactionModelMatches =
+    selectedProvider !== "pi" ||
+    (activeContextWindow?.contextModel ===
+      (composerSelectedModelSelection?.model ??
+        reportedModelSelection?.model ??
+        activeThread?.modelSelection.model) &&
+      chrome.contextWindowProviderInstanceId === activeProviderInstanceId);
   const resumeCompactionDue = useClockReached(
-    activeContextWindow
-      ? resumeCompactionDueAtMs({
+    activeContextWindow && compactionModelMatches
+      ? promptCacheCompactionDueAt({
           provider: selectedProvider,
           usedTokens: activeContextWindow.usedTokens,
+          maxTokens: activeContextWindow.maxTokens,
+          promptCacheExpiresAt: activeContextWindow.promptCacheExpiresAt,
           updatedAt: activeContextWindow.updatedAt,
           // Only the live report carries a TTL, and only when it is the window's source.
           promptCacheTtlMs: chrome.promptCacheTtlMs,
         })
       : null,
   );
-  // Tokens a stale Claude session would re-read on its next turn. While set,
+  const compactionReason: CompactionReason | null =
+    selectedProvider === "pi" &&
+    compactionModelMatches &&
+    activeContextWindow &&
+    hasContextPressure(activeContextWindow)
+      ? "context-pressure"
+      : resumeCompactionDue
+        ? "cache-expiry"
+        : null;
+  // Tokens the session would re-read on its next turn. While set,
   // the composer shows a Compact chip and Enter compacts first; turning the
   // chip off sends the next message with full history. Held queues and
   // multi-model sends never compact first, so the offer hides for them.
   const resumeCompactionTokens =
     activeContextWindow &&
     activeContextWindow.usedTokens !== null &&
-    !resumeCompactionPermanentlyDismissed &&
-    !nativeResumeCompactionDismissed &&
+    (compactionReason === "context-pressure" ||
+      (!resumeCompactionPermanentlyDismissed && !nativeResumeCompactionDismissed)) &&
     !compactDisabled &&
     !hasHeldQueuedRuns &&
     multipleModelSelections === null &&
-    resumeCompactionDue
+    compactionReason !== null
       ? activeContextWindow.usedTokens
       : null;
   // Threads whose Compact chip is turned off. A send that starts its turn
@@ -8888,7 +8908,7 @@ export default function ChatView(props: ChatViewProps) {
     );
     const messageIdForSend = newMessageId();
     const messageCreatedAt = new Date().toISOString();
-    // A stale Claude session compacts before this message so the turn does not re-read the
+    // The session compacts before this message so the turn does not re-read the
     // old history. The message queues behind the /compact run, since steering into it is
     // rejected.
     const compactBeforeSend =
@@ -11360,6 +11380,7 @@ export default function ChatView(props: ChatViewProps) {
                               queuedRunsControl={queuedRunsControl}
                               bannerItems={composerBannerItems}
                               resumeCompactionTokens={resumeCompactionTokens}
+                              compactionReason={compactionReason ?? "cache-expiry"}
                               keepFullHistory={keepFullHistory}
                               onToggleKeepFullHistory={toggleKeepFullHistoryStable}
                               // With attachments or contexts aboard the pick just inserts the

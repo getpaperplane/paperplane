@@ -80,6 +80,14 @@ export interface PiSessionLike {
   getEntries?(): ReadonlyArray<PiSessionEntryLike>;
   getBranch?(): ReadonlyArray<PiSessionEntryLike>;
   getSessionStats?(): PiSessionStatsLike | undefined;
+  getCompactionStatus?():
+    | {
+        readonly contextModel: string;
+        readonly autoCompactThreshold: number;
+        readonly promptCacheTtlMs?: number;
+        readonly promptCacheExpiresAt?: string;
+      }
+    | undefined;
   getLeafId?(): string | undefined;
   fork?(entryId: string | null): Promise<void>;
 }
@@ -197,6 +205,7 @@ export function piContextUsage(session: PiSessionLike): ThreadTokenUsageSnapshot
   return {
     usedTokens: Math.round(context.tokens),
     maxTokens,
+    ...session.getCompactionStatus?.(),
     ...auto,
     ...processed,
     ...(hasUsage

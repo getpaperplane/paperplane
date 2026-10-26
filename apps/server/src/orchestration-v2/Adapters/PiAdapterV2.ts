@@ -598,6 +598,10 @@ export const makePiAdapterV2 = Effect.fn("makePiAdapterV2")(function* (
         )
           return;
         if (!active) {
+          if (event.type === "entry_appended") {
+            yield* publishThread();
+            return;
+          }
           if (event.type === "extension_error" || event.type === "paperplane_model_fallback") {
             const at = yield* DateTime.now;
             const message = makeProviderFailure({ message: piTrimmed(event.error) }).message;

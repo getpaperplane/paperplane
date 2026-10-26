@@ -285,6 +285,10 @@ const ThreadTokenUsageSharedFields = {
   durationMs: Schema.optional(NonNegativeInt),
   compactsAutomatically: Schema.optional(Schema.Boolean),
   autoCompactThreshold: Schema.optional(PositiveInt),
+  contextModel: Schema.optional(TrimmedNonEmptyStringSchema),
+  promptCacheTtlMs: Schema.optional(PositiveInt),
+  /** Estimated expiry of the latest request's cache, including successful warm-ups. */
+  promptCacheExpiresAt: Schema.optional(Schema.String),
   cost: Schema.optional(
     Schema.Struct({
       amount: Schema.Number.check(Schema.isFinite()),

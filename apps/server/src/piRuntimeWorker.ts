@@ -54,6 +54,7 @@ function sessionUpdates(session: PiSessionLike) {
         resumeOutcome: session.resumeOutcome,
         modelFallbackMessage: session.modelFallbackMessage,
         autoCompactionEnabled: session.autoCompactionEnabled,
+        compactionStatus: session.getCompactionStatus?.(),
         thinkingLevel: session.getThinkingLevel?.(),
         model: session.getModel?.(),
         stats: session.getSessionStats?.(),
@@ -184,6 +185,7 @@ export async function runPiRuntimeWorker(): Promise<void> {
                 event.type === "message_end" ||
                   event.type === "agent_settled" ||
                   event.type === "compaction_end" ||
+                  event.type === "entry_appended" ||
                   event.type === "prompt_error",
               ),
             });

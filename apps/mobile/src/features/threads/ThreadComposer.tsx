@@ -1,4 +1,9 @@
 import * as Dialog from "../../components/ui/Dialog";
+import {
+  compactionReasonDescription,
+  type CompactionReason,
+} from "@getpaperplane/client-runtime/compaction";
+import { SymbolView } from "../../components/ui/AppSymbol";
 import type { ComposerTextPaste } from "../../native/PaperplaneComposerEditor.types";
 import { useAppearancePreferences } from "../settings/appearance/AppearancePreferencesProvider";
 import type { EnvironmentThreadShell } from "@getpaperplane/client-runtime/state/shell";
@@ -148,6 +153,9 @@ export const COMPOSER_COLLAPSED_CHROME = 60;
 export const COMPOSER_EXPANDED_CHROME = 156;
 
 export interface ThreadComposerProps {
+  readonly compactionReason?: CompactionReason | null | undefined;
+  readonly keepFullHistory?: boolean | undefined;
+  readonly onToggleKeepFullHistory?: (() => void) | undefined;
   readonly canOperateThread: boolean;
   readonly draftMessage: string;
   readonly draftAttachments: ReadonlyArray<DraftComposerAttachment>;
@@ -387,6 +395,33 @@ export const ThreadComposer = memo(function ThreadComposer(props: ThreadComposer
   const composerPanel = materialTheme["--color-composer-panel"];
   const navigation = useNavigation();
   const foregroundColor = useUniwindTheme()["--color-foreground"];
+  const colors = useUniwindTheme();
+  const compactionColor = props.keepFullHistory
+    ? colors["--color-foreground-muted"]
+    : props.compactionReason === "context-pressure"
+      ? colors["--color-warning-foreground"]
+      : colors["--color-update-foreground"];
+  const compactionReason = props.compactionReason;
+  const compactControl = compactionReason ? (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={props.keepFullHistory ? "Keep full history" : "Compact before sending"}
+      accessibilityHint={compactionReasonDescription(props.compactionReason)}
+      accessibilityState={{ selected: !props.keepFullHistory, disabled: !props.canOperateThread }}
+      disabled={!props.canOperateThread}
+      onPress={props.onToggleKeepFullHistory}
+      onLongPress={() =>
+        Dialog.alert("Compact before sending", compactionReasonDescription(compactionReason))
+      }
+      className="h-9 flex-row items-center gap-1 rounded-full border px-2"
+      style={{ borderColor: themeColorWithAlpha(compactionColor, 0.4) }}
+    >
+      <SymbolView name="arrow.down.right.and.arrow.up.left" size={13} tintColor={compactionColor} />
+      <Text className="text-xs font-paperplane-medium" style={{ color: compactionColor }}>
+        {props.keepFullHistory ? "Full" : "Compact"}
+      </Text>
+    </Pressable>
+  ) : null;
   const bodyText = useScaledTextRole("body");
   const fallbackInputRef = useRef<ComposerEditorHandle>(null);
   const inputRef = props.editorRef ?? fallbackInputRef;
@@ -1089,6 +1124,7 @@ export const ThreadComposer = memo(function ThreadComposer(props: ThreadComposer
             ) : null}
             {!isExpanded ? (
               <View className="flex-row items-center">
+                {compactControl}
                 <ComposerDictationStartAction
                   state={voiceInput.state}
                   isAvailable={voiceInput.isAvailable}
@@ -1182,6 +1218,7 @@ export const ThreadComposer = memo(function ThreadComposer(props: ThreadComposer
                   </View>
                 )}
                 <View className="shrink-0 flex-row items-center">
+                  {compactControl}
                   <ComposerDictationPrimaryAction
                     state={voiceInput.state}
                     presentation={voicePresentation}
