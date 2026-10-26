@@ -22,6 +22,7 @@ import {
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as Redacted from "effect/Redacted";
 import * as RpcTest from "effect/rpc/RpcTest";
 
 import {
@@ -30,6 +31,54 @@ import {
   requiredScopeForDeviceList,
 } from "./RpcAuthorization.ts";
 import * as RpcAuthorization from "./RpcAuthorization.ts";
+
+describe("computer-use installation authorization", () => {
+  const group = WsRpcGroup.omit(
+    ...[...WsRpcGroup.requests.keys()].filter(
+      (
+        tag,
+      ): tag is Exclude<keyof typeof RPC_REQUIRED_SCOPES, typeof WS_METHODS.computerUseControl> =>
+        tag !== WS_METHODS.computerUseControl,
+    ),
+  );
+  it.effect.each([false, true])(
+    "requires maintenance at execution, including password submissions: %s",
+    (maintain) =>
+      Effect.gen(function* () {
+        const handled: string[] = [];
+        const client = yield* RpcTest.makeClient(group).pipe(
+          Effect.provide(
+            Layer.mergeAll(
+              group.toLayerHandler(WS_METHODS.computerUseControl, (input) =>
+                Effect.sync(() => {
+                  handled.push(input.action);
+                  return { status: "not-installed" as const, platform: "linux" as const };
+                }),
+              ),
+              RpcAuthorization.layer(
+                maintain
+                  ? [AuthOrchestrationOperateScope, AuthEnvironmentMaintainScope]
+                  : [AuthOrchestrationOperateScope],
+              ),
+            ),
+          ),
+        );
+        expect(yield* client[WS_METHODS.computerUseControl]({ action: "start" })).toMatchObject({
+          status: "not-installed",
+        });
+        const result = yield* client[WS_METHODS.computerUseControl]({
+          action: "install",
+          authorization: Redacted.make("fixture-password"),
+        }).pipe(Effect.result);
+        expect(result._tag).toBe(maintain ? "Success" : "Failure");
+        if (result._tag === "Failure")
+          expect(result.failure).toMatchObject({
+            requiredPermission: AuthEnvironmentMaintainScope,
+          });
+        expect(handled).toEqual(maintain ? ["start", "install"] : ["start"]);
+      }).pipe(Effect.scoped),
+  );
+});
 
 describe("RPC authorization scopes", () => {
   it("declares exactly one scope for every RPC in the server group", () => {

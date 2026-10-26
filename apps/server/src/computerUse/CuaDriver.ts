@@ -2,6 +2,7 @@ import * as NodeOS from "node:os";
 
 import {
   ComputerUseControlError,
+  ComputerUseSetupAuthorizationError,
   type ComputerUseDiagnostic,
   type ComputerUseReadiness,
   type ComputerUseControlInput,
@@ -129,7 +130,10 @@ export class CuaDriver extends Context.Service<
     readonly status: Effect.Effect<ComputerUseStatus>;
     readonly control: (
       input: ComputerUseControlInput,
-    ) => Effect.Effect<ComputerUseStatus, ComputerUseControlError>;
+    ) => Effect.Effect<
+      ComputerUseStatus,
+      ComputerUseControlError | ComputerUseSetupAuthorizationError
+    >;
     /** Connects on first use. macOS may launch a daemon; Windows only proxies to the interactive task. */
     readonly catalog: (threadId?: ThreadId) => Effect.Effect<CuaCatalog, CuaDriverUnavailableError>;
     readonly call: (
@@ -151,7 +155,16 @@ export const make = Effect.fn("CuaDriver.make")(function* (options?: {
   const fileSystem = yield* FileSystem.FileSystem;
   const platform = yield* HostProcessPlatform;
   const path = yield* Path.Path;
-  const environment = yield* HostProcessEnvironment;
+  const hostEnvironment = yield* HostProcessEnvironment;
+  const environment =
+    platform === "linux"
+      ? {
+          ...hostEnvironment,
+          PATH: [hostEnvironment.PATH, "/usr/local/bin", "/usr/bin", "/bin"]
+            .filter(Boolean)
+            .join(":"),
+        }
+      : hostEnvironment;
   const linuxInstallDir =
     environment.CUA_DRIVER_RS_INSTALL_DIR ??
     environment.CUA_DRIVER_BIN_DIR ??
@@ -200,6 +213,7 @@ export const make = Effect.fn("CuaDriver.make")(function* (options?: {
     platform === "linux"
       ? yield* LinuxDesktop.make().pipe(
           Effect.provideService(ComputerDesktops.ComputerDesktops, registry),
+          Effect.provideService(HostProcessEnvironment, environment),
         )
       : undefined;
   const vms =
@@ -216,6 +230,7 @@ export const make = Effect.fn("CuaDriver.make")(function* (options?: {
   // Serializes connecting, releasing, and reading the daemon so an idle release never
   // races a status read or a new connection.
   const lock = yield* Semaphore.make(1);
+  const installLock = yield* Semaphore.make(1);
   // Cua's parser has no session argument, so capture ownership must be transport-local.
   const connections = new Map<string, Connection>();
   /** True only when Paperplane launched the running daemon; Paperplane never quits one it did not start. */
@@ -528,32 +543,34 @@ export const make = Effect.fn("CuaDriver.make")(function* (options?: {
     Effect.orElseSucceed(() => null),
   );
 
-  const linuxDiagnostics = Effect.suspend(() => {
-    const current = connections.values().next().value;
-    if (!current) return Effect.succeed(null);
-    return Effect.tryPromise({
-      try: (signal) =>
-        current.client.callTool({ name: "health_report", arguments: {} }, undefined, {
-          signal,
-          timeout: 10_000,
+  const linuxDiagnostics = (key?: string) =>
+    Effect.suspend(() => {
+      const current = key === undefined ? connections.values().next().value : connections.get(key);
+      if (!current) return Effect.succeed(null);
+      return Effect.tryPromise({
+        try: (signal) =>
+          current.client.callTool({ name: "health_report", arguments: {} }, undefined, {
+            signal,
+            timeout: 10_000,
+          }),
+        catch: describeCause,
+      }).pipe(
+        Effect.map((result) => {
+          if (result.isError) return null;
+          const report = Option.getOrNull(decodeHealth(result.structuredContent));
+          const [first, ...rest] =
+            report?.checks
+              .filter((check) => check.status !== "skip")
+              .map((check): ComputerUseDiagnostic => ({
+                label: check.name,
+                status: check.status === "pass" ? "ok" : check.status === "warn" ? "warn" : "err",
+                message: check.message,
+              })) ?? [];
+          return first ? ([first, ...rest] as const) : null;
         }),
-      catch: describeCause,
-    }).pipe(
-      Effect.map((result) => {
-        const report = Option.getOrNull(decodeHealth(result.structuredContent));
-        const [first, ...rest] =
-          report?.checks
-            .filter((check) => check.status !== "skip")
-            .map((check): ComputerUseDiagnostic => ({
-              label: check.name,
-              status: check.status === "pass" ? "ok" : check.status === "warn" ? "warn" : "err",
-              message: check.message,
-            })) ?? [];
-        return first ? ([first, ...rest] as const) : null;
-      }),
-      Effect.orElseSucceed(() => null),
-    );
-  });
+        Effect.orElseSucceed(() => null),
+      );
+    });
 
   const statusUnlocked: Effect.Effect<ComputerUseStatus> = Effect.gen(function* () {
     const mode = yield* syncModeUnlocked.pipe(Effect.result);
@@ -611,7 +628,7 @@ export const make = Effect.fn("CuaDriver.make")(function* (options?: {
       platform === "linux"
         ? {
             platform,
-            diagnostics: yield* linuxDiagnostics,
+            diagnostics: yield* linuxDiagnostics(),
             desktops: desktops?.count() ?? 0,
             capacity: LinuxDesktop.CAPACITY,
           }
@@ -764,20 +781,84 @@ export const make = Effect.fn("CuaDriver.make")(function* (options?: {
         .pipe(Effect.mapError((cause) => fail(cause.message)));
       return yield* status;
     }
-    const found = yield* lock.withPermit(presence);
     if (input.action === "install") {
-      if (desktops) {
-        const readiness = found === "trusted" ? yield* desktops.check(executablePath) : undefined;
-        if (readiness?.kind === "ready") return yield* status;
-        yield* desktops.preflight.pipe(Effect.mapError((cause) => fail(cause.detail)));
-        if (found !== "trusted") yield* install;
-        yield* desktops
-          .install(executablePath)
-          .pipe(Effect.mapError((cause) => fail(cause.detail)));
-      } else if (found !== "trusted") yield* install;
-      if (platform === "win32") yield* startWindows(input.action);
-      return yield* status;
+      return yield* installLock.withPermit(
+        Effect.gen(function* () {
+          const found = yield* lock.withPermit(presence);
+          if (desktops) {
+            yield* desktops
+              .prepare(input.authorization)
+              .pipe(
+                Effect.mapError((cause) =>
+                  cause._tag === "ComputerUseSetupAuthorizationError" ? cause : fail(cause.detail),
+                ),
+              );
+            const readiness =
+              found === "trusted" ? yield* desktops.check(executablePath) : undefined;
+            const supportsDirect = run(["mcp", "--help"]).pipe(
+              Effect.map((output) => output.code === 0 && output.stdout.includes("--direct")),
+              Effect.orElseSucceed(() => false),
+            );
+            const discardControl = lock.withPermit(
+              Effect.gen(function* () {
+                const current = connections.get(CONTROL_CONNECTION);
+                if (current) yield* closeConnection(CONTROL_CONNECTION, current);
+                yield* desktops
+                  .close(CONTROL_CONNECTION)
+                  .pipe(Effect.mapError((cause) => fail(cause.detail)));
+              }),
+            );
+            const refreshDriver = Effect.gen(function* () {
+              yield* discardControl;
+              yield* install;
+              if (!(yield* supportsDirect))
+                return yield* fail(
+                  "The installed Cua Driver does not support direct MCP on this Linux host. Its executable or required system libraries may be incompatible.",
+                );
+              yield* desktops
+                .install(executablePath)
+                .pipe(Effect.mapError((cause) => fail(cause.detail)));
+            });
+            const needsDriver = found !== "trusted" || !(yield* supportsDirect);
+            if (needsDriver) yield* refreshDriver;
+            else if (readiness?.kind !== "ready") {
+              yield* desktops
+                .install(executablePath)
+                .pipe(Effect.mapError((cause) => fail(cause.detail)));
+            }
+            const verify = connected(CONTROL_CONNECTION).pipe(
+              Effect.andThen(linuxDiagnostics(CONTROL_CONNECTION)),
+            );
+            let verified = yield* verify.pipe(Effect.result);
+            if (!needsDriver && (verified._tag === "Failure" || verified.success === null)) {
+              yield* refreshDriver;
+              verified = yield* verify.pipe(Effect.result);
+            }
+            if (verified._tag === "Failure") {
+              yield* discardControl;
+              return yield* fail(verified.failure.detail);
+            }
+            if (
+              verified.success === null ||
+              verified.success.some((probe) => probe.status === "err")
+            ) {
+              yield* discardControl;
+              return yield* fail(
+                verified.success === null
+                  ? "Cua Driver did not provide compatible Linux desktop health checks after installation."
+                  : `Linux desktop checks failed: ${verified.success
+                      .filter((probe) => probe.status === "err")
+                      .map((probe) => `${probe.label}: ${probe.message}`)
+                      .join("; ")}`,
+              );
+            }
+          } else if (found !== "trusted") yield* install;
+          if (platform === "win32") yield* startWindows("install");
+          return yield* status;
+        }),
+      );
     }
+    const found = yield* lock.withPermit(presence);
     if (found !== "trusted") {
       return yield* fail(found === "missing" ? "Cua Driver is not installed." : trustDetail());
     }

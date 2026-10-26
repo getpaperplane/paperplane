@@ -49,6 +49,8 @@ const withRuntime = <A, E>(
     setRootless: (enabled: boolean) => void;
     setImage: (enabled: boolean) => void;
     setRemovalFailure: (enabled: boolean) => void;
+    setHostPolicy: (policy: "supported" | "cgroups-v1" | "namespaces-disabled") => void;
+    setSystemPodmanAvailable: () => void;
   }) => Effect.Effect<A, E, FileSystem.FileSystem | Path.Path>,
 ) =>
   Effect.gen(function* () {
@@ -64,14 +66,30 @@ const withRuntime = <A, E>(
     let rootless = true;
     let image = true;
     let removalFailure = false;
+    let hostPolicy: "supported" | "cgroups-v1" | "namespaces-disabled" = "supported";
+    let systemPodmanAvailable = false;
     const runner = ProcessRunner.ProcessRunner.of({
-      run: ({ args }) =>
+      run: ({ command, args }) =>
         Effect.sync(() => {
+          if (command === "/bin/sh") return output();
+          if (command === "/sbin/ldconfig")
+            return output("libXi.so.6 libxkbcommon.so.0 libX11.so.6");
           runs.push(args);
           expect(args[0]).toBe("--remote=false");
+          if (args.includes("--help"))
+            return output(
+              "--env-host --http-proxy --read-only --tmpfs --memory --cpus --pids-limit --tag --file",
+            );
           switch (args[1]) {
             case "info":
-              return output(encodeJson({ host: { security: { rootless } } }));
+              return output(
+                encodeJson({
+                  host: {
+                    security: { rootless },
+                    idMappings: { uidmap: [{ size: 65536 }], gidmap: [{ size: 65536 }] },
+                  },
+                }),
+              );
             case "ps":
               return output("[]");
             case "image":
@@ -97,6 +115,19 @@ const withRuntime = <A, E>(
     const runtime = yield* LinuxDesktop.make().pipe(
       Effect.provideService(ComputerDesktops.ComputerDesktops, registry),
       Effect.provideService(ProcessRunner.ProcessRunner, runner),
+      Effect.provideService(FileSystem.FileSystem, {
+        ...fs,
+        exists: (path) =>
+          path === "/sys/fs/cgroup/cgroup.controllers"
+            ? Effect.succeed(hostPolicy !== "cgroups-v1")
+            : path === "/usr/bin/podman"
+              ? Effect.succeed(systemPodmanAvailable)
+              : fs.exists(path),
+        readFileString: (path, options) =>
+          path === "/proc/sys/user/max_user_namespaces" && hostPolicy === "namespaces-disabled"
+            ? Effect.succeed("0\n")
+            : fs.readFileString(path, options),
+      }),
     );
     const launch = (transport: LinuxDesktop.Transport) =>
       Effect.sync(() => {
@@ -122,6 +153,12 @@ const withRuntime = <A, E>(
       runs,
       containers,
       launch,
+      setHostPolicy: (policy) => {
+        hostPolicy = policy;
+      },
+      setSystemPodmanAvailable: () => {
+        systemPodmanAvailable = true;
+      },
       setRootless: (enabled) => {
         rootless = enabled;
       },
@@ -155,6 +192,36 @@ it.effect("requires rootless local Podman and a prepared image without host fall
       expect(yield* runtime.check(executable)).toEqual({ kind: "ready" });
     }),
   ),
+);
+
+for (const policy of ["cgroups-v1", "namespaces-disabled"] as const) {
+  it.effect(`reports ${policy} before running package installation`, () =>
+    withRuntime(({ runtime, setHostPolicy, runs }) =>
+      Effect.gen(function* () {
+        setHostPolicy(policy);
+        const failure = yield* runtime.prepare().pipe(Effect.flip);
+        expect(failure.detail).toContain(
+          policy === "cgroups-v1" ? "requires cgroups v2" : "disables unprivileged user namespaces",
+        );
+        expect(runs).toEqual([]);
+      }),
+    ),
+  );
+}
+
+it.effect(
+  "uses the installed system Podman explicitly instead of a shadowing PATH executable",
+  () =>
+    withRuntime(({ runtime, executable, setSystemPodmanAvailable }) =>
+      Effect.gen(function* () {
+        setSystemPodmanAvailable();
+        yield* runtime.prepare();
+        const command = yield* runtime.connect("control", executable, (transport) =>
+          Effect.succeed(transport.command),
+        );
+        expect(command).toBe("/usr/bin/podman");
+      }),
+    ),
 );
 
 it.effect(
@@ -250,11 +317,25 @@ it.effect("reconciles dead boot owners but preserves live servers and unknown ow
         });
       }
       const runner = ProcessRunner.ProcessRunner.of({
-        run: ({ args }) =>
+        run: ({ command, args }) =>
           Effect.sync(() => {
+            if (command === "/bin/sh") return output();
+            if (command === "/sbin/ldconfig")
+              return output("libXi.so.6 libxkbcommon.so.0 libX11.so.6");
             runs.push(args);
+            if (args.includes("--help"))
+              return output(
+                "--env-host --http-proxy --read-only --tmpfs --memory --cpus --pids-limit --tag --file",
+              );
             if (args[1] === "info")
-              return output(encodeJson({ host: { security: { rootless: true } } }));
+              return output(
+                encodeJson({
+                  host: {
+                    security: { rootless: true },
+                    idMappings: { uidmap: [{ size: 65536 }], gidmap: [{ size: 65536 }] },
+                  },
+                }),
+              );
             if (args[1] === "ps")
               return output(
                 encodeJson(
@@ -277,8 +358,8 @@ it.effect("reconciles dead boot owners but preserves live servers and unknown ow
         Effect.provide(ComputerDesktops.layer),
         Effect.provideService(ProcessRunner.ProcessRunner, runner),
       );
-      yield* restarted.preflight;
-      yield* restarted.preflight;
+      yield* restarted.prepare();
+      yield* restarted.prepare();
       expect(containers.has("dead")).toBe(false);
       expect(containers.has(live)).toBe(true);
       expect(containers.has("unknown")).toBe(true);

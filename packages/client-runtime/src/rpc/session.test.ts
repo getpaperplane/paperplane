@@ -31,6 +31,7 @@ import {
   ConnectionTransientError,
   PrimaryConnectionTarget,
   RelayConnectionTarget,
+  SshConnectionTarget,
   type PreparedConnection,
 } from "../connection/model.ts";
 import * as EnvironmentSupervisor from "../connection/supervisor.ts";
@@ -288,6 +289,33 @@ const publishConfigEvents = Effect.fn("TestRpcSessionFactory.publishConfigEvents
 });
 
 describe("RpcSessionFactory", () => {
+  it.effect.each([
+    { socketUrl: "wss://environment.example.test/ws", ssh: false, expected: "tls" },
+    { socketUrl: "ws://192.168.1.20/ws", ssh: false, expected: undefined },
+    { socketUrl: "ws://100.64.0.20/ws", ssh: false, expected: undefined },
+    { socketUrl: "ws://host.tailnet.ts.net/ws", ssh: false, expected: undefined },
+    { socketUrl: "ws://127.0.0.1:1234/ws", ssh: false, expected: "loopback" },
+    { socketUrl: "ws://[::1]:1234/ws", ssh: false, expected: "loopback" },
+    { socketUrl: "ws://127.0.0.1:1234/ws", ssh: true, expected: "ssh" },
+  ])(
+    "derives credential protection from the actual socket attempt: $socketUrl, SSH=$ssh",
+    ({ socketUrl, ssh, expected }) =>
+      Effect.gen(function* () {
+        const { factory } = yield* makeFactory();
+        const connection = yield* factory.connect({
+          ...PREPARED,
+          socketUrl,
+          target: ssh
+            ? new SshConnectionTarget({
+                environmentId: TARGET.environmentId,
+                label: TARGET.label,
+                connectionId: "fixture-ssh",
+              })
+            : TARGET,
+        });
+        expect(connection.confidentialTransport).toBe(expected);
+      }).pipe(Effect.scoped),
+  );
   it.effect("owns one scoped websocket attempt and exposes readiness and closure", () =>
     Effect.gen(function* () {
       const { factory, sockets } = yield* makeFactory();

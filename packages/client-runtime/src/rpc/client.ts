@@ -1,5 +1,6 @@
 import {
   EnvironmentAuthorizationError,
+  ComputerUseControlInput,
   clientRpcRequiredScopes,
   authScopeRequiredResponse,
   type EnvironmentId,
@@ -107,6 +108,7 @@ export class EnvironmentRpcSubscriptionObserver extends Context.Reference<{
 
 export const isRpcClientError = Schema.is(RpcClientError.RpcClientError);
 const isEnvironmentAuthorizationError = Schema.is(EnvironmentAuthorizationError);
+const isComputerUseControlInput = Schema.is(ComputerUseControlInput);
 
 /** Ceiling for the doubling delay between same-session expected-failure retries. */
 const MAX_EXPECTED_FAILURE_RETRY_DELAY_MS = 30_000;
@@ -200,6 +202,19 @@ export const requestGuarded = Effect.fn("EnvironmentRpc.request")(function* <
     "rpc.method": tag,
   });
   const session = yield* currentSession();
+  if (
+    tag === WS_METHODS.computerUseControl &&
+    isComputerUseControlInput(input) &&
+    input.action === "install" &&
+    input.authorization !== undefined &&
+    session.confidentialTransport === undefined
+  ) {
+    return yield* new EnvironmentRpcUnavailableError({
+      environmentId: supervisor.target.environmentId,
+      message:
+        "Administrator passwords require an encrypted HTTPS or SSH connection, or a connection on this device. Reconnect securely before retrying Install.",
+    });
+  }
   yield* authorizeRequest(tag, input);
   const observer = yield* EnvironmentRpcRequestObserver;
   const method = session.client[tag] as (

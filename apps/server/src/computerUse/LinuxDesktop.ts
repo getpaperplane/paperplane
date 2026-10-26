@@ -1,7 +1,11 @@
 // @effect-diagnostics nodeBuiltinImport:off -- Podman image hashing and process-scoped container names use synchronous Node crypto.
 import * as NodeCrypto from "node:crypto";
 
-import { ComputerDesktopViewerError, ThreadId } from "@getpaperplane/contracts";
+import {
+  ComputerDesktopViewerError,
+  ComputerUseSetupAuthorizationError,
+  ThreadId,
+} from "@getpaperplane/contracts";
 import * as ComputerDesktops from "./ComputerDesktops.ts";
 import { Environment as HostProcessEnvironment } from "@getpaperplane/shared/HostProcess";
 import * as Duration from "effect/Duration";
@@ -10,9 +14,11 @@ import * as FileSystem from "effect/FileSystem";
 import * as Option from "effect/Option";
 import * as Path from "effect/Path";
 import * as Schema from "effect/Schema";
+import * as Redacted from "effect/Redacted";
 
 import * as ProcessRunner from "../processRunner.ts";
 import { DESKTOP_FILES } from "./LinuxDesktopImage.ts";
+import * as LinuxDesktopSetup from "./LinuxDesktopSetup.ts";
 
 export const CAPACITY = 4;
 const OWNER_LABEL = "io.paperplane.cua.owner";
@@ -35,8 +41,14 @@ const Containers = Schema.fromJsonString(
   ),
 );
 const decodeContainers = Schema.decodeUnknownEffect(Containers);
+const IdMap = Schema.Array(Schema.Struct({ size: Schema.Int }));
 const RootlessInfo = Schema.fromJsonString(
-  Schema.Struct({ host: Schema.Struct({ security: Schema.Struct({ rootless: Schema.Boolean }) }) }),
+  Schema.Struct({
+    host: Schema.Struct({
+      security: Schema.Struct({ rootless: Schema.Boolean }),
+      idMappings: Schema.NullOr(Schema.Struct({ uidmap: IdMap, gidmap: IdMap })),
+    }),
+  }),
 );
 const Inspection = Schema.fromJsonString(
   Schema.Array(
@@ -70,7 +82,9 @@ export interface Transport {
 }
 
 export interface Runtime {
-  readonly preflight: Effect.Effect<void, LinuxDesktopError>;
+  readonly prepare: (
+    authorization?: Redacted.Redacted<string>,
+  ) => Effect.Effect<void, LinuxDesktopError | ComputerUseSetupAuthorizationError>;
   readonly check: (executable: string) => Effect.Effect<Readiness>;
   readonly install: (executable: string) => Effect.Effect<void, LinuxDesktopError>;
   readonly connect: <A, E, R>(
@@ -96,10 +110,11 @@ export const make = Effect.fn("LinuxDesktop.make")(function* () {
   const owner = NodeCrypto.randomUUID();
   const desktops = new Map<string, string>();
   const references = new Map<string, { stamp: string; image: string }>();
+  let podmanCommand = "podman";
   const run = (args: ReadonlyArray<string>, timeout: Duration.Input = "30 seconds") =>
     runner
       .run({
-        command: "podman",
+        command: podmanCommand,
         args: ["--remote=false", ...args],
         env: environment,
         timeout,
@@ -175,7 +190,7 @@ export const make = Effect.fn("LinuxDesktop.make")(function* () {
     const output = yield* run(["info", "--format", "json"]);
     if (output.code !== 0)
       return yield* error(
-        "Rootless Podman is unavailable. Install podman and uidmap, then run podman info as the user running Paperplane.",
+        "Rootless Podman is unavailable. Select Install or Retry to set up this Linux host automatically.",
       );
     const info = yield* decodeInfo(output.stdout).pipe(
       Effect.mapError(() => error("Podman returned unreadable runtime information.")),
@@ -184,12 +199,135 @@ export const make = Effect.fn("LinuxDesktop.make")(function* () {
       return yield* error(
         "Linux computer use requires rootless Podman. Run Paperplane as an unprivileged user.",
       );
-    yield* reconcile;
+    const mappings = info.host.idMappings;
+    if (
+      mappings === null ||
+      !mappings.uidmap.some((mapping) => mapping.size >= 65536) ||
+      !mappings.gidmap.some((mapping) => mapping.size >= 65536)
+    )
+      return yield* error(
+        "Rootless user-ID mappings are incomplete. Select Install or Retry to repair Linux setup. Existing Podman containers may need to finish before setup can apply the new mappings.",
+      );
   }).pipe(
     Effect.mapError((cause) =>
       error(`Linux headless desktop needs rootless Podman. ${cause.detail}`),
     ),
   );
+
+  const requireCapabilities = Effect.gen(function* () {
+    for (const [command, flags] of [
+      [
+        "run",
+        [
+          "--env-host",
+          "--http-proxy",
+          "--read-only",
+          "--tmpfs",
+          "--memory",
+          "--cpus",
+          "--pids-limit",
+        ],
+      ],
+      ["build", ["--memory", "--tag", "--file"]],
+    ] as const) {
+      const help = yield* run([command, "--help"], "10 seconds");
+      const missing = flags.filter((flag) => !`${help.stdout}\n${help.stderr}`.includes(flag));
+      if (help.code !== 0 || missing.length > 0) {
+        const version = yield* run(["--version"]).pipe(Effect.result);
+        const installed =
+          version._tag === "Success"
+            ? (/\b\d+\.\d+\.\d+(?:[-+][\w.-]+)?\b/.exec(version.success.stdout)?.[0] ?? "unknown")
+            : "unknown";
+        return yield* error(
+          `Podman ${installed} lacks required private-desktop features (${command}${missing.length ? `: ${missing.join(", ")}` : ""}). This host's package repositories or selected Podman executable may be too old.`,
+        );
+      }
+    }
+  });
+
+  const requireKernel = Effect.gen(function* () {
+    if (
+      !(yield* fs
+        .exists("/sys/fs/cgroup/cgroup.controllers")
+        .pipe(Effect.mapError(() => error("Cannot inspect Linux cgroups support."))))
+    )
+      return yield* error(
+        "Linux computer use requires cgroups v2 to enforce desktop resource limits. This host's kernel or outer container does not provide it.",
+      );
+    for (const setting of [
+      "/proc/sys/user/max_user_namespaces",
+      "/proc/sys/kernel/unprivileged_userns_clone",
+    ]) {
+      const value = yield* fs.readFileString(setting).pipe(Effect.option);
+      if (Option.isSome(value) && value.value.trim() === "0")
+        return yield* error(
+          "This Linux host's administrator policy disables unprivileged user namespaces. Computer use cannot create a private desktop until the host administrator enables them.",
+        );
+    }
+  });
+
+  const prepare = (authorization?: Redacted.Redacted<string>) =>
+    Effect.gen(function* () {
+      yield* requireKernel;
+      if (yield* fs.exists("/usr/bin/podman").pipe(Effect.orElseSucceed(() => false)))
+        podmanCommand = "/usr/bin/podman";
+      const ready = yield* requireRootless.pipe(Effect.andThen(requireCapabilities), Effect.result);
+      const downloads = yield* runner
+        .run({
+          command: "/bin/sh",
+          args: [
+            "-c",
+            "command -v bash >/dev/null && command -v curl >/dev/null && command -v tar >/dev/null",
+          ],
+          env: environment,
+        })
+        .pipe(Effect.result);
+      const libraries = yield* runner
+        .run({ command: "/sbin/ldconfig", args: ["-p"], env: environment })
+        .pipe(Effect.result);
+      const librariesReady =
+        libraries._tag === "Success" &&
+        libraries.success.code === 0 &&
+        ["libXi.so.6", "libxkbcommon.so.0", "libX11.so.6"].every((library) =>
+          libraries.success.stdout.includes(library),
+        );
+      if (
+        ready._tag === "Failure" ||
+        downloads._tag === "Failure" ||
+        downloads.success.code !== 0 ||
+        !librariesReady
+      ) {
+        yield* LinuxDesktopSetup.install(authorization).pipe(
+          Effect.mapError((cause) =>
+            cause._tag === "ComputerUseSetupAuthorizationError" ? cause : error(cause.message),
+          ),
+        );
+        if (yield* fs.exists("/usr/bin/podman").pipe(Effect.orElseSucceed(() => false)))
+          podmanCommand = "/usr/bin/podman";
+        const running = yield* run(["ps", "--quiet"]);
+        if (running.code !== 0)
+          return yield* error("Cannot check running containers after Linux setup.");
+        // Podman caches its user namespace. Refresh it only when no user's containers would stop.
+        if (running.stdout.trim() === "") {
+          const migrated = yield* run(["system", "migrate"]);
+          if (migrated.code !== 0)
+            return yield* error(
+              "Could not apply rootless access after Linux setup. Retry Install.",
+            );
+        }
+        yield* requireRootless;
+        yield* requireCapabilities;
+      }
+      yield* reconcile;
+    }).pipe(
+      Effect.provideService(ProcessRunner.ProcessRunner, runner),
+      Effect.provideService(HostProcessEnvironment, environment),
+      Effect.ensuring(
+        Effect.sync(() => {
+          if (authorization) Redacted.wipeUnsafe(authorization);
+        }),
+      ),
+    );
 
   const reference = Effect.fn("LinuxDesktop.reference")(
     function* (executable: string) {
@@ -215,7 +353,7 @@ export const make = Effect.fn("LinuxDesktop.make")(function* () {
   const check = Effect.fn("LinuxDesktop.check")(function* (
     executable: string,
   ): Effect.fn.Return<Readiness> {
-    const ready = yield* requireRootless.pipe(Effect.result);
+    const ready = yield* requireRootless.pipe(Effect.andThen(reconcile), Effect.result);
     if (ready._tag === "Failure") return { kind: "unavailable", detail: ready.failure.detail };
     const image = yield* reference(executable).pipe(Effect.result);
     if (image._tag === "Failure") return { kind: "unavailable", detail: image.failure.detail };
@@ -232,6 +370,7 @@ export const make = Effect.fn("LinuxDesktop.make")(function* () {
   const install = Effect.fn("LinuxDesktop.install")(
     function* (executable: string) {
       yield* requireRootless;
+      yield* reconcile;
       const image = yield* reference(executable);
       const directory = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-cua-image-" });
       for (const [name, content] of Object.entries(DESKTOP_FILES)) {
@@ -314,7 +453,7 @@ export const make = Effect.fn("LinuxDesktop.make")(function* () {
             "The private desktop is not running with this server's ownership. No input was sent.",
           );
         return yield* use({
-          command: "podman",
+          command: podmanCommand,
           args: ["--remote=false", "exec", "--interactive", existing, "/usr/local/bin/mcp.sh"],
         });
       }
@@ -331,7 +470,7 @@ export const make = Effect.fn("LinuxDesktop.make")(function* () {
       const server = yield* identity;
       desktops.set(key, name);
       const result = yield* use({
-        command: "podman",
+        command: podmanCommand,
         args: [
           "--remote=false",
           "run",
@@ -389,7 +528,7 @@ export const make = Effect.fn("LinuxDesktop.make")(function* () {
               kind: "process" as const,
               password: null,
               transport: {
-                command: "podman",
+                command: podmanCommand,
                 args: ["--remote=false", "exec", "--interactive", name, "/usr/local/bin/vnc.sh"],
               },
             };
@@ -413,7 +552,7 @@ export const make = Effect.fn("LinuxDesktop.make")(function* () {
     if (failures.length > 0) return yield* error(failures.join("\n"));
   });
   return {
-    preflight: requireRootless,
+    prepare,
     check,
     install,
     connect,
