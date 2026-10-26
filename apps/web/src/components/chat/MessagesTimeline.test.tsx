@@ -1753,7 +1753,8 @@ describe("MessagesTimeline", () => {
     expect(markup).toContain('aria-expanded="false"');
     expect(markup).toContain("Superseded attempt");
     expect(markup).toContain("Cut off by a steer");
-    expect(markup).toContain("Current response remains visible");
+    // The streaming tail wraps each word in a span, so match the text content.
+    expect(markup.replace(/<[^>]+>/g, "")).toContain("Current response remains visible");
     expect(markup).not.toContain("Partial response from the old attempt");
   });
 

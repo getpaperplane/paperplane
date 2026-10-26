@@ -187,9 +187,9 @@ describe("theme files", () => {
     });
     expectThemeColors(getStandardThemeColors("dark"), {
       canvas: "#0f131b",
-      sidebar: "#121721",
-      sidebarRowActive: "#2a2e35",
-      messageSurface: "#1e2433",
+      sidebar: "#070a0f",
+      sidebarRowActive: "#202225",
+      messageSurface: "#1a1f2d",
     });
   });
 
