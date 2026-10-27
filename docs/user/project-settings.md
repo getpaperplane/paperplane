@@ -247,5 +247,7 @@ read and merge as. **Default** follows the server's active GitHub sign-in; a nam
 the project to that sign-in. When the named account cannot read the repository or loses its
 credentials, pull requests fail with the sign-in error and the project keeps its choice until you
 change it. Commit & push, **Pull**, and automatic pulls also authenticate as the named account
-when the remote uses HTTPS; SSH remotes keep using your SSH keys. Agent-run `gh` and `git` commands
-use their own sign-in.
+when the remote uses HTTPS; SSH remotes keep using your SSH keys. Agents working in the project
+run `gh` and HTTPS `git` as the named account too, without changing your active `gh` login. A
+`GH_TOKEN` (or `GH_ENTERPRISE_TOKEN`) set where Paperplane runs still takes priority
+for `gh`. Changing the account restarts the agent session on its next turn.

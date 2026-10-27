@@ -912,7 +912,7 @@ export const SETTINGS_SEARCH_ITEMS = [
     id: "github-account",
     title: "Project GitHub account",
     to: "/settings/source-control",
-    searchTerms: ["github gh login account host project pull request push pull sign in"],
+    searchTerms: ["github gh login account host project pull request push pull sign in agent git"],
     environmentOnly: true,
     scope: "project-defaults",
   },

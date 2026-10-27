@@ -175,6 +175,8 @@ import {
   subagentThreadTitle,
 } from "@getpaperplane/provider-core/server/subagentProjection";
 
+const isOpenSessionError = Schema.is(ProviderAdapter.ProviderAdapterOpenSessionError);
+
 export const CLAUDE_PROVIDER = ProviderDriverKind.make("claudeAgent");
 export const CLAUDE_AGENT_SDK_QUERY_PROTOCOL = "claude-agent-sdk.query" as const;
 
@@ -3545,6 +3547,9 @@ export const makeClaudeAdapterV2 = Effect.fn("makeClaudeAdapterV2")(function* (
     openSession: Effect.fn("ClaudeAdapterV2.openSession")(
       function* (input: ProviderAdapter.ProviderAdapterV2OpenSessionInput) {
         const sessionScope = yield* Effect.scope;
+        const environment = input.prepareEnvironment
+          ? yield* input.prepareEnvironment(adapterOptions.environment)
+          : adapterOptions.environment;
         const now = yield* DateTime.now;
         const session = providerSession({
           providerSessionId: input.providerSessionId,
@@ -3560,7 +3565,7 @@ export const makeClaudeAdapterV2 = Effect.fn("makeClaudeAdapterV2")(function* (
           string,
           { readonly fiber: Fiber.Fiber<void>; readonly stop: Deferred.Deferred<void> }
         >();
-        const taskOutputRoot = claudeTaskOutputRoot(adapterOptions.environment, path);
+        const taskOutputRoot = claudeTaskOutputRoot(environment, path);
         // Waits for the tail's last read so its output lands before the call settles.
         const stopTaskOutputTail = (toolUseId: string) =>
           Effect.suspend(() => {
@@ -4926,13 +4931,10 @@ export const makeClaudeAdapterV2 = Effect.fn("makeClaudeAdapterV2")(function* (
                 ? yield* readWorkflowAgentAnswers({
                     transcriptDir,
                     agentId,
-                    ...(adapterOptions.environment.CLAUDE_CONFIG_DIR === undefined
+                    ...(environment.CLAUDE_CONFIG_DIR === undefined
                       ? {}
                       : {
-                          configDir: path.resolve(
-                            session.cwd,
-                            adapterOptions.environment.CLAUDE_CONFIG_DIR,
-                          ),
+                          configDir: path.resolve(session.cwd, environment.CLAUDE_CONFIG_DIR),
                         }),
                   }).pipe(Effect.orElseSucceed((): ReadonlyArray<string> => []))
                 : [];
@@ -7095,7 +7097,7 @@ export const makeClaudeAdapterV2 = Effect.fn("makeClaudeAdapterV2")(function* (
               context.latestAssistantRateLimited = message.error === "rate_limit";
               if (message.error === "authentication_failed") {
                 context.authenticationFailureMessage = claudeSignedOutMessage({
-                  configDir: adapterOptions.environment.CLAUDE_CONFIG_DIR,
+                  configDir: environment.CLAUDE_CONFIG_DIR,
                   cwd: path.resolve(context.input.runtimePolicy.cwd ?? "."),
                 });
               }
@@ -8653,7 +8655,7 @@ export const makeClaudeAdapterV2 = Effect.fn("makeClaudeAdapterV2")(function* (
             cwd: turnInput.runtimePolicy.cwd,
             attachmentsDir,
             settings: adapterOptions.settings,
-            environment: adapterOptions.environment,
+            environment,
             tools: queryPolicy.tools ?? CLAUDE_CODE_PRESET_TOOLS,
             ...(mcpOverrides.allowedTools === undefined
               ? {}
@@ -9691,13 +9693,14 @@ export const makeClaudeAdapterV2 = Effect.fn("makeClaudeAdapterV2")(function* (
       },
       (effect, input) =>
         effect.pipe(
-          Effect.mapError(
-            (cause) =>
-              new ProviderAdapter.ProviderAdapterOpenSessionError({
-                driver: CLAUDE_PROVIDER,
-                providerSessionId: input.providerSessionId,
-                cause,
-              }),
+          Effect.mapError((cause) =>
+            isOpenSessionError(cause)
+              ? cause
+              : new ProviderAdapter.ProviderAdapterOpenSessionError({
+                  driver: CLAUDE_PROVIDER,
+                  providerSessionId: input.providerSessionId,
+                  cause,
+                }),
           ),
         ),
     ),

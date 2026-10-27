@@ -2,7 +2,11 @@ import * as OtelEnvironment from "@getpaperplane/shared/otelEnvironment";
 import { DEFAULT_SIGNAL_EXPORT } from "@getpaperplane/shared/observability";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { checkpointWorkspace } from "@getpaperplane/provider-testing/replayWorkspace";
-import type { ProviderDriverKind, ProviderReplayTranscript } from "@getpaperplane/contracts";
+import type {
+  ProviderDriverKind,
+  ProviderReplayTranscript,
+  ServerSettingsError,
+} from "@getpaperplane/contracts";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
@@ -17,6 +21,8 @@ import * as CheckpointStore from "../../checkpointing/CheckpointStore.ts";
 import * as ServerConfig from "../../config.ts";
 import * as SqlitePersistence from "../../persistence/Sqlite.ts";
 import * as ServerSettings from "../../serverSettings.ts";
+import * as AgentGitHubEnvironment from "../../provider/AgentGitHubEnvironment.ts";
+import * as ProcessRunner from "../../processRunner.ts";
 import * as ThreadManagementService from "../ThreadManagementService.ts";
 import * as McpProviderSessions from "@getpaperplane/provider-core/server/McpProviderSessions";
 import * as McpSessionRegistryTestkit from "../../mcp/McpSessionRegistry.testkit.ts";
@@ -201,6 +207,7 @@ export function runOrchestratorV2ProviderReplayScenario<
     // as server startup does after a crash or restart.
     readonly recoverOnStartup?: boolean;
     readonly continueThreadsAfterServerUpdate?: boolean;
+    readonly serverSettingsLayer?: ReturnType<typeof ServerSettings.layerTest>;
   } = {},
 ): Effect.Effect<
   OrchestratorV2ScenarioResult,
@@ -208,6 +215,7 @@ export function runOrchestratorV2ProviderReplayScenario<
   | OrchestratorV2ScenarioStepError
   | Error
   | MigrationError
+  | ServerSettingsError
   | PlatformError.PlatformError
   | SqlError,
   never
@@ -255,7 +263,7 @@ export function layerProviderReplay<Transcript extends ProviderReplayTranscript,
   | EventSink.EventSinkV2
   | CommandOutputRecorder.CommandOutputRecorder
   | ProviderSessionManager.ProviderSessionManagerV2,
-  Error | MigrationError | PlatformError.PlatformError | SqlError
+  Error | MigrationError | ServerSettingsError | PlatformError.PlatformError | SqlError
 > {
   const layerRegistry = harness.makeProviderAdapterRegistryLayer(
     scenario.transcript,
@@ -284,6 +292,7 @@ export function layerWithRegistry<Error>(
     // as server startup does after a crash or restart.
     readonly recoverOnStartup?: boolean;
     readonly continueThreadsAfterServerUpdate?: boolean;
+    readonly serverSettingsLayer?: ReturnType<typeof ServerSettings.layerTest>;
   } = {},
 ): Layer.Layer<
   | Orchestrator.OrchestratorV2
@@ -291,7 +300,7 @@ export function layerWithRegistry<Error>(
   | EventSink.EventSinkV2
   | ProviderSessionManager.ProviderSessionManagerV2
   | CommandOutputRecorder.CommandOutputRecorder,
-  Error | MigrationError | PlatformError.PlatformError | SqlError
+  Error | MigrationError | ServerSettingsError | PlatformError.PlatformError | SqlError
 > {
   const layerServerConfig = Layer.effect(
     ServerConfig.ServerConfig,
@@ -330,12 +339,14 @@ export function layerWithRegistry<Error>(
   const layerProvidedRegistry = registryLayer.pipe(
     Layer.provide(Layer.merge(layerContinuationRequests, McpProviderSessions.layer)),
   );
-  const layerServerSettings = ServerSettings.layerTest({
-    responseStreamingMode: "turn",
-    ...(options.continueThreadsAfterServerUpdate === undefined
-      ? {}
-      : { continueThreadsAfterServerUpdate: options.continueThreadsAfterServerUpdate }),
-  }).pipe(Layer.orDie);
+  const layerServerSettings =
+    options.serverSettingsLayer ??
+    ServerSettings.layerTest({
+      responseStreamingMode: "turn",
+      ...(options.continueThreadsAfterServerUpdate === undefined
+        ? {}
+        : { continueThreadsAfterServerUpdate: options.continueThreadsAfterServerUpdate }),
+    }).pipe(Layer.orDie);
   const layerStores = Layer.mergeAll(
     EventStore.layer,
     ProjectionStore.layer,
@@ -395,6 +406,8 @@ export function layerWithRegistry<Error>(
   }).pipe(
     Layer.provide(
       Layer.mergeAll(
+        layerServerSettings,
+        AgentGitHubEnvironment.layer.pipe(Layer.provide(ProcessRunner.layer)),
         layerCommandOutputHubProvided,
         layerProvidedRegistry,
         layerEventSinkProvided,
@@ -554,7 +567,7 @@ export function layerWithRegistry<Error>(
   // the effect worker claims anything, as in serverRuntimeStartup.
   const layerStartupRecovery: Layer.Layer<
     never,
-    MigrationError | PlatformError.PlatformError | SqlError
+    MigrationError | ServerSettingsError | PlatformError.PlatformError | SqlError
   > =
     options.recoverOnStartup === true
       ? Layer.effectDiscard(

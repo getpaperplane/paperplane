@@ -4,6 +4,7 @@ import { assert, it } from "@effect/vitest";
 import { AgentScope } from "@getpaperplane/shared/AgentScope";
 import {
   EnvironmentId,
+  type GitHubAccountSelection,
   type ModelSelection,
   type OrchestrationV2AppThread,
   type OrchestrationV2DomainEvent,
@@ -29,11 +30,14 @@ import * as Metric from "effect/Metric";
 import * as Option from "effect/Option";
 import * as Queue from "effect/Queue";
 import * as Ref from "effect/Ref";
+import * as Schema from "effect/Schema";
 import * as Stream from "effect/Stream";
 import { TestClock } from "effect/testing";
 import { HttpServer } from "effect/http";
 
 import { ProviderWorkspaceMissingError } from "../provider/Errors.ts";
+import * as AgentGitHubEnvironment from "../provider/AgentGitHubEnvironment.ts";
+import * as ProcessRunner from "../processRunner.ts";
 import * as ServerEnvironment from "../environment/ServerEnvironment.ts";
 import * as ProjectService from "../project/ProjectService.ts";
 import * as McpProviderSession from "@getpaperplane/provider-core/server/mcpSession";
@@ -370,6 +374,9 @@ const makeProviderAdapter = Effect.fnUntraced(function* (
     planSelectionTransition: () => Effect.succeed({ type: "apply_on_next_turn" }),
     openSession: (input) =>
       Effect.gen(function* () {
+        if (input.prepareEnvironment !== undefined) {
+          yield* input.prepareEnvironment({ INHERITED: "provider-environment" });
+        }
         if (options.spawnBeforeOpen === true) {
           yield* countClose;
           if (options.hangSessionScopeClose === true) yield* hangClose;
@@ -498,9 +505,11 @@ function layerTest(input: {
   readonly spawnBeforeOpen?: boolean;
   readonly scopeCloseReached?: Deferred.Deferred<void>;
   readonly serverSettingsLayer?: ReturnType<typeof ServerSettings.layerTest>;
+  readonly githubEnvironmentLayer?: Layer.Layer<AgentGitHubEnvironment.AgentGitHubEnvironment>;
   readonly projectServiceLayer?: Layer.Layer<ProjectService.ProjectService>;
   readonly adapterRegistryLayer?: Layer.Layer<ProviderAdapterRegistry.ProviderAdapterRegistryV2>;
 }) {
+  const layerServerSettings = input.serverSettingsLayer ?? ServerSettings.layerTest();
   const layerConfiguredEventSink =
     input.flakyReleaseWrites !== undefined
       ? layerFlakyReleaseEventSink(input.flakyReleaseWrites)
@@ -557,6 +566,7 @@ function layerTest(input: {
     ),
   );
   return Layer.mergeAll(
+    layerServerSettings,
     layerTestStores,
     layerConfiguredEventSink,
     IdAllocator.layer,
@@ -580,7 +590,9 @@ function layerTest(input: {
           layerProviderEventIngestorTest,
           layerConfiguredMcpRegistry,
           layerTestStores,
-          ...(input.serverSettingsLayer === undefined ? [] : [input.serverSettingsLayer]),
+          layerServerSettings,
+          input.githubEnvironmentLayer ??
+            AgentGitHubEnvironment.layer.pipe(Layer.provide(ProcessRunner.layer)),
           ...(input.projectServiceLayer === undefined ? [] : [input.projectServiceLayer]),
         ),
       ),
@@ -2146,15 +2158,14 @@ it.effect("ProviderSessionManagerV2 fails browser access closed for a missing pr
   }),
 );
 
-it.effect("ProviderSessionManagerV2 fails browser access closed for a missing thread", () =>
+it.effect("ProviderSessionManagerV2 refuses to open a session for a missing thread", () =>
   Effect.gen(function* () {
     const captured = yield* runBrowserAccessScenario({
       enableAgentBrowserAccess: true,
       projectOverride: true,
       createThread: false,
     });
-    assert.isDefined(captured);
-    assert.equal(captured?.browserToolsAvailable, false);
+    assert.isUndefined(captured);
   }),
 );
 
@@ -4914,8 +4925,8 @@ it.effect(
         yield* resumeSecondThread;
         assert.equal((yield* Ref.get(state)).resumeCount, 4);
 
-        // The second thread has no persisted provider thread, so nothing is unloaded.
-        assert.deepEqual((yield* Ref.get(state)).unloadedNativeThreadIds, []);
+        // Detach unloads what the thread loaded, even when it was never persisted.
+        assert.deepEqual((yield* Ref.get(state)).unloadedNativeThreadIds, ["native-thread"]);
 
         yield* manager.detach({ providerSessionId, threadId: firstThreadId });
         assert.isTrue(Option.isSome(yield* manager.get(providerSessionId)));
@@ -4923,7 +4934,10 @@ it.effect(
         assert.equal((yield* Ref.get(state)).interruptCount, 1);
         // The runtime stays up for the second thread; the first thread's
         // native state is unloaded after its turn is interrupted.
-        assert.deepEqual((yield* Ref.get(state)).unloadedNativeThreadIds, ["native-thread"]);
+        assert.deepEqual((yield* Ref.get(state)).unloadedNativeThreadIds, [
+          "native-thread",
+          "native-thread",
+        ]);
 
         yield* manager.detach({ providerSessionId, threadId: secondThreadId });
         yield* TestClock.adjust("1 second");
@@ -5414,5 +5428,219 @@ it.effect(
         projectExists: false,
       });
       assert.isFalse(denied?.capabilities?.has("device"));
+    }),
+);
+
+it.effect(
+  "ProviderSessionManagerV2 restarts only its own runtime when GitHub selection changes",
+  () =>
+    Effect.gen(function* () {
+      const state = yield* Ref.make(emptyState);
+      const prepared = yield* Ref.make<ReadonlyArray<GitHubAccountSelection | null>>([]);
+      const cleaned = yield* Ref.make<ReadonlyArray<GitHubAccountSelection | null>>([]);
+      const githubEnvironmentLayer = Layer.succeed(AgentGitHubEnvironment.AgentGitHubEnvironment, {
+        prepare: (selection, environment) =>
+          Effect.gen(function* () {
+            assert.deepEqual(environment, { INHERITED: "provider-environment" });
+            yield* Ref.update(prepared, (current) => [...current, selection]);
+            yield* Effect.addFinalizer(() =>
+              Ref.update(cleaned, (current) => [...current, selection]),
+            );
+            return { ...environment, GH_CONFIG_DIR: "/session-owned-gh" };
+          }),
+      });
+      yield* Effect.gen(function* () {
+        const manager = yield* ProviderSessionManager.ProviderSessionManagerV2;
+        const settings = yield* ServerSettings.ServerSettingsService;
+        const eventSink = yield* EventSink.EventSinkV2;
+        const idAllocator = yield* IdAllocator.IdAllocatorV2;
+        const now = yield* DateTime.now;
+        const projectId = ProjectId.make("project:github-selection");
+        const threadId = ThreadId.make("thread:github-selection");
+        const otherThreadId = ThreadId.make("thread:unconfigured");
+        yield* eventSink.write({
+          events: [
+            yield* makeThreadCreatedEvent({ idAllocator, threadId, projectId, now }),
+            yield* makeThreadCreatedEvent({
+              idAllocator,
+              threadId: otherThreadId,
+              projectId: ProjectId.make("project:unconfigured"),
+              now,
+            }),
+          ],
+        });
+        const providerSessionId = yield* idAllocator.allocate.providerSession({
+          providerInstanceId: modelSelection.instanceId,
+          threadId,
+        });
+        const sharedId = idAllocator.derive.providerSession({
+          providerInstanceId: modelSelection.instanceId,
+        });
+        const other = yield* manager.open({
+          threadId: otherThreadId,
+          providerSessionId: sharedId,
+          modelSelection,
+          runtimePolicy,
+        });
+        const open = manager.open({ threadId, providerSessionId, modelSelection, runtimePolicy });
+        let current = yield* open;
+        for (const selection of [
+          { host: "github.com", login: "alice" },
+          { host: "github.com", login: "bob" },
+          { host: "git.example.com", login: "bob" },
+        ]) {
+          yield* settings.updateSettings({
+            projectSettingsOverrides: { [projectId]: { githubAccount: selection } },
+          });
+          const replacement = yield* open;
+          assert.notStrictEqual(replacement, current);
+          assert.strictEqual(yield* open, replacement);
+          current = replacement;
+          assert.strictEqual(Option.getOrThrow(yield* manager.get(sharedId)), other);
+        }
+        assert.deepEqual(yield* Ref.get(prepared), [
+          { host: "github.com", login: "alice" },
+          { host: "github.com", login: "bob" },
+          { host: "git.example.com", login: "bob" },
+        ]);
+        assert.equal((yield* Ref.get(cleaned)).length, 2);
+        yield* manager.detach({ threadId, providerSessionId });
+        assert.strictEqual(yield* open, current);
+        yield* settings.updateSettings({ projectSettingsOverrides: { [projectId]: null } });
+        const unconfigured = yield* open;
+        assert.notStrictEqual(unconfigured, current);
+        assert.strictEqual(yield* open, unconfigured);
+        assert.equal((yield* Ref.get(prepared)).length, 3);
+        assert.equal((yield* Ref.get(cleaned)).length, 3);
+        assert.equal((yield* Ref.get(state)).openCount, 6);
+        assert.equal((yield* Ref.get(state)).closeCount, 4);
+        assert.strictEqual(Option.getOrThrow(yield* manager.get(sharedId)), other);
+      }).pipe(Effect.provide(layerTest({ state, githubEnvironmentLayer, idleTimeoutMs: 60_000 })));
+    }),
+);
+
+it.effect(
+  "ProviderSessionManagerV2 refuses conflicting GitHub attachments without closing another thread's runtime",
+  () =>
+    Effect.gen(function* () {
+      const state = yield* Ref.make(emptyState);
+      const githubEnvironmentLayer = Layer.succeed(AgentGitHubEnvironment.AgentGitHubEnvironment, {
+        prepare: (_selection, environment) => Effect.succeed(environment),
+      });
+      yield* Effect.gen(function* () {
+        const manager = yield* ProviderSessionManager.ProviderSessionManagerV2;
+        const settings = yield* ServerSettings.ServerSettingsService;
+        const eventSink = yield* EventSink.EventSinkV2;
+        const idAllocator = yield* IdAllocator.IdAllocatorV2;
+        const now = yield* DateTime.now;
+        const projectId = ProjectId.make("project:shared-credentials");
+        const first = ThreadId.make("thread:shared-credentials-a");
+        const second = ThreadId.make("thread:shared-credentials-b");
+        const providerSessionId = idAllocator.derive.providerSession({
+          providerInstanceId: modelSelection.instanceId,
+        });
+        yield* eventSink.write({
+          events: [
+            yield* makeThreadCreatedEvent({ idAllocator, threadId: first, projectId, now }),
+            yield* makeThreadCreatedEvent({ idAllocator, threadId: second, projectId, now }),
+          ],
+        });
+        const open = (threadId: ThreadId) =>
+          manager.open({ threadId, providerSessionId, modelSelection, runtimePolicy });
+        const shared = yield* open(first);
+        assert.strictEqual(yield* open(second), shared);
+        yield* settings.updateSettings({
+          projectSettingsOverrides: {
+            [projectId]: { githubAccount: { host: "github.com", login: "alice" } },
+          },
+        });
+        for (const threadId of [first, second]) {
+          const result = yield* Effect.exit(open(threadId));
+          assert.ok(Exit.isFailure(result));
+          assert.equal((yield* Ref.get(state)).closeCount, 0);
+          assert.strictEqual(Option.getOrThrow(yield* manager.get(providerSessionId)), shared);
+        }
+        yield* settings.updateSettings({ projectSettingsOverrides: { [projectId]: null } });
+        assert.strictEqual(yield* open(first), shared);
+        yield* manager.close(providerSessionId);
+        yield* settings.updateSettings({
+          projectSettingsOverrides: {
+            [projectId]: { githubAccount: { host: "github.com", login: "alice" } },
+          },
+        });
+        const privateRuntime = yield* open(first);
+        // The same selection must not grant a second thread access to the process.
+        assert.ok(Exit.isFailure(yield* Effect.exit(open(second))));
+        const foreignResume = privateRuntime.resumeThread({
+          threadId: second,
+          providerThread: makeProviderThread({
+            idAllocator,
+            threadId: second,
+            providerSessionId,
+            now,
+          }),
+          modelSelection,
+          runtimePolicy,
+        });
+        assert.ok(Exit.isFailure(yield* Effect.exit(foreignResume)));
+        yield* manager.detach({ providerSessionId, threadId: first });
+        assert.ok(Exit.isFailure(yield* Effect.exit(open(second))));
+        assert.ok(Exit.isFailure(yield* Effect.exit(foreignResume)));
+        assert.strictEqual(yield* open(first), privateRuntime);
+        assert.equal((yield* Ref.get(state)).closeCount, 1);
+        assert.equal((yield* Ref.get(state)).resumeCount, 0);
+      }).pipe(Effect.provide(layerTest({ state, githubEnvironmentLayer, idleTimeoutMs: 60_000 })));
+    }),
+);
+
+it.effect(
+  "ProviderSessionManagerV2 propagates GitHub preparation failure without opening an ambient-credential runtime",
+  () =>
+    Effect.gen(function* () {
+      const state = yield* Ref.make(emptyState);
+      const projectId = ProjectId.make("project:github-preparation-failure");
+      const selection = { host: "github.com", login: "missing" };
+      const githubEnvironmentLayer = Layer.succeed(AgentGitHubEnvironment.AgentGitHubEnvironment, {
+        prepare: () =>
+          Effect.fail(
+            new AgentGitHubEnvironment.AgentGitHubEnvironmentError({
+              ...selection,
+              stage: "credential",
+            }),
+          ),
+      });
+      yield* Effect.gen(function* () {
+        const manager = yield* ProviderSessionManager.ProviderSessionManagerV2;
+        const eventSink = yield* EventSink.EventSinkV2;
+        const idAllocator = yield* IdAllocator.IdAllocatorV2;
+        const now = yield* DateTime.now;
+        const threadId = ThreadId.make("thread:github-preparation-failure");
+        yield* eventSink.write({
+          events: [yield* makeThreadCreatedEvent({ idAllocator, threadId, projectId, now })],
+        });
+        const providerSessionId = yield* idAllocator.allocate.providerSession({
+          providerInstanceId: modelSelection.instanceId,
+          threadId,
+        });
+        const result = yield* Effect.exit(
+          manager.open({ threadId, providerSessionId, modelSelection, runtimePolicy }),
+        );
+        assert.ok(Exit.isFailure(result));
+        assert.ok(
+          Schema.is(ProviderSessionManager.ProviderSessionOpenError)(Cause.squash(result.cause)),
+        );
+        assert.equal((yield* Ref.get(state)).openCount, 0);
+        assert.ok(Option.isNone(yield* manager.get(providerSessionId)));
+      }).pipe(
+        Effect.provide(
+          layerTest({
+            state,
+            githubEnvironmentLayer,
+            serverSettingsLayer: ServerSettings.layerTest({
+              projectSettingsOverrides: { [projectId]: { githubAccount: selection } },
+            }),
+          }),
+        ),
+      );
     }),
 );

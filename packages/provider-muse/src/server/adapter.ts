@@ -297,6 +297,9 @@ export const makeMuseAdapterV2 = Effect.fn("makeMuseAdapterV2")(function* (
       if (input.runtimePolicy.interactionMode === "plan")
         return yield* protocolError("Muse Code does not support dedicated Plan mode");
       const scope = yield* Effect.scope;
+      const sessionEnvironment = input.prepareEnvironment
+        ? yield* input.prepareEnvironment(options.environment)
+        : options.environment;
       // Muse rejects non-canonical workspace roots (for example macOS /tmp) and
       // reports canonical paths in approvals, so resolve symlinks once here.
       const requestedCwd = input.runtimePolicy.cwd ?? providerHost.paths.cwd;
@@ -1652,7 +1655,7 @@ export const makeMuseAdapterV2 = Effect.fn("makeMuseAdapterV2")(function* (
         const epoch = ++hostEpoch;
         const mcpSession = yield* mcpSessions.read(input.threadId);
         const environment = McpProviderSession.withAgentDeviceEnvironment(
-          options.environment,
+          sessionEnvironment,
           mcpSession,
         );
         const launch = yield* agentScope.wrap({

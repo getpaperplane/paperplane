@@ -9,6 +9,14 @@ import { afterEach, beforeEach, describe, expect, it } from "vite-plus/test";
 import { executeProcessControl, makeManagedProcess } from "../../diagnostics/ProcessBudget.ts";
 import { resolvePiWorkloadMemory } from "../../diagnostics/PiWorkloadPolicy.ts";
 import { PiWorkloads } from "./PiWorkloads.ts";
+import { createPiSession } from "./PiSessionFactory.ts";
+import * as PiSdk from "@earendil-works/pi-coding-agent";
+type PiTool = Awaited<
+  ReturnType<typeof PiSdk.createAgentSessionFromServices>
+>["session"]["agent"]["state"]["tools"][number];
+import { vi } from "vite-plus/test";
+
+vi.mock("@earendil-works/pi-coding-agent", { spy: true });
 
 const supported =
   process.platform === "linux" &&
@@ -94,6 +102,47 @@ describe.skipIf(!supported)("Pi command isolation on Linux", () => {
     );
     return { command, ready };
   }
+
+  it("scopes bash and workload_start environments to the owning session", async () => {
+    const { workloads } = await manager();
+    const service = await gate();
+    const agentDir = NodePath.join(directory, "agent");
+    await NodeFSP.mkdir(agentDir);
+    const original = process.env.PAPERPLANE_TEST_SESSION_ENV;
+    const session = await createPiSession(
+      {
+        cwd: directory,
+        agentDir,
+        environment: { ...process.env, PAPERPLANE_TEST_SESSION_ENV: "managed-session" },
+        model: undefined,
+        thinkingLevel: undefined,
+        resumeSessionId: undefined,
+      },
+      { extensions: false, workloads },
+    );
+    try {
+      const sdk = (await vi.mocked(PiSdk.createAgentSessionFromServices).mock.results.at(-1)!.value)
+        .session;
+      const bash = sdk.agent.state.tools.find((tool: PiTool) => tool.name === "bash");
+      const start = sdk.agent.state.tools.find((tool: PiTool) => tool.name === "workload_start");
+      if (!bash || !start) throw new Error("Missing workload tools");
+      expect(
+        (await bash.execute("bash-env", { command: 'printf "%s" "$PAPERPLANE_TEST_SESSION_ENV"' }))
+          .content,
+      ).toEqual([{ type: "text", text: "managed-session" }]);
+      await start.execute("service-env", {
+        command: `printf '%s' "$PAPERPLANE_TEST_SESSION_ENV" > ${quote(NodePath.join(directory, "environment"))}; ${service.command}`,
+      });
+      await service.ready;
+      expect(await NodeFSP.readFile(NodePath.join(directory, "environment"), "utf8")).toBe(
+        "managed-session",
+      );
+      expect(process.env.PAPERPLANE_TEST_SESSION_ENV).toBe(original);
+    } finally {
+      await session.dispose();
+      vi.restoreAllMocks();
+    }
+  });
 
   it("honors the legacy foreground lock for slot zero", async () => {
     const { workloads } = await manager();

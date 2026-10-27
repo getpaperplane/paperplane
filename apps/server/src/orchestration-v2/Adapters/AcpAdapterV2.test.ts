@@ -450,6 +450,7 @@ function makeMockRuntime(input: {
             args: [input.mockAgentPath],
             cwd: runtimeInput.cwd,
             env: {
+              ...runtimeInput.processEnvironment,
               PAPERPLANE_ACP_SESSION_LIFECYCLE: "1",
               ...(typeof input.environment === "function"
                 ? input.environment(runtimeOrdinal)
@@ -2191,9 +2192,11 @@ describe("AcpAdapterV2", () => {
           return {};
         },
       });
+      let preparations = 0;
       const instanceId = ProviderInstanceId.make("acp-test-unexpected-termination");
       const adapter = yield* makeAcpAdapterV2({
         instanceId,
+        environment: { INSTANCE_ENV: "acp" },
         flavor: {
           driver: ACP_TEST_DRIVER,
           capabilities: AcpProviderCapabilitiesV2,
@@ -2213,6 +2216,12 @@ describe("AcpAdapterV2", () => {
       const modelSelection = { instanceId, model: "default" } as const;
       const runtime = yield* adapter.openSession({
         threadId,
+        prepareEnvironment: (environment) =>
+          Effect.sync(() => {
+            preparations += 1;
+            assert.equal(environment.INSTANCE_ENV, "acp");
+            return { ...environment, SESSION_ENV: "prepared" };
+          }),
         providerSessionId: ProviderSessionId.make("provider-session-acp-unexpected-termination"),
         modelSelection,
         runtimePolicy,
@@ -2245,6 +2254,11 @@ describe("AcpAdapterV2", () => {
       );
       assert.equal(runtimeOrdinalSeen, 2);
       assert.lengthOf(runtimeInputs, 2);
+      assert.equal(preparations, 1);
+      assert.deepEqual(
+        runtimeInputs.map((input) => input.processEnvironment?.SESSION_ENV),
+        ["prepared", "prepared"],
+      );
     }).pipe(Effect.provide(layerTest), Effect.scoped),
   );
 

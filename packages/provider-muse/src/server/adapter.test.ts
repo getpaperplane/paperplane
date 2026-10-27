@@ -193,6 +193,7 @@ const makeHarness = Effect.fnUntraced(function* (
     MuseAdapterV2Options,
     "createHost" | "nativeEventLogger" | "modelCatalog" | "continuationRequests"
   > = {},
+  prepareEnvironment?: ProviderAdapter.ProviderAdapterV2OpenSessionInput["prepareEnvironment"],
 ) {
   let hostCount = 0;
   const adapter = yield* makeMuseAdapterV2({
@@ -205,6 +206,7 @@ const makeHarness = Effect.fnUntraced(function* (
   const runtime = yield* adapter.openSession({
     threadId: THREAD_ID,
     providerSessionId: ProviderSessionId.make(`session-${instanceId}`),
+    ...(prepareEnvironment ? { prepareEnvironment } : {}),
     modelSelection: modelSelection(instanceId),
     runtimePolicy: policy,
     ...(initialNativeThreadId ? { initialNativeThreadId } : {}),
@@ -351,6 +353,34 @@ const approval = (turnId: string) => ({
 });
 
 describe("MuseAdapterV2", () => {
+  it.effect("passes the prepared environment to the SDK host", () =>
+    Effect.gen(function* () {
+      const fake = yield* makeFakeMuse();
+      const environments: NodeJS.ProcessEnv[] = [];
+      yield* makeHarness(
+        fake,
+        INSTANCE_ID,
+        undefined,
+        undefined,
+        undefined,
+        runtimePolicy,
+        {
+          createHost: async (input) => {
+            environments.push(input.environment ?? {});
+            return fake.host;
+          },
+        },
+        (environment) =>
+          Effect.sync(() => {
+            assert.equal(environment.PATH, "/fake/bin");
+            return { ...environment, SESSION_ENV: "prepared" };
+          }),
+      );
+      assert.equal(environments[0]?.PATH, "/fake/bin");
+      assert.equal(environments[0]?.SESSION_ENV, "prepared");
+    }).pipe(Effect.scoped, Effect.provide(testLayer)),
+  );
+
   it.effect("connects the thread's MCP credential on native start and resume", () =>
     Effect.gen(function* () {
       yield* (yield* McpProviderSessions.McpProviderSessions).set({

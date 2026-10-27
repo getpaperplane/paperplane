@@ -10,6 +10,9 @@ import * as DateTime from "effect/DateTime";
 import { ThreadId } from "@getpaperplane/contracts";
 import { ModelRuntime, SessionManager, SettingsManager } from "@earendil-works/pi-coding-agent";
 import * as PiSdk from "@earendil-works/pi-coding-agent";
+type PiTool = Awaited<
+  ReturnType<typeof PiSdk.createAgentSessionFromServices>
+>["session"]["agent"]["state"]["tools"][number];
 import { EnvironmentId, ProviderInstanceId } from "@getpaperplane/contracts";
 import * as PiPaperplaneTools from "./PiPaperplaneTools.ts";
 import { afterEach, beforeEach, describe, expect, vi } from "vite-plus/test";
@@ -69,6 +72,83 @@ describe("headless Pi extensions", () => {
     return session;
   };
   const log = () => NodeFS.readFileSync(NodePath.join(cwd, "extension.log"), "utf8");
+
+  it("keeps prepared shell environments separate across sessions in one SDK worker", async () => {
+    const original = process.env.PAPERPLANE_TEST_SESSION_ENV;
+    const sdkCreate = vi.spyOn(PiSdk, "createAgentSessionFromServices").mockClear();
+    const run = async (value: string) => {
+      const session = await createPiSession(
+        {
+          cwd,
+          environment: { ...process.env, PAPERPLANE_TEST_SESSION_ENV: value },
+          model: undefined,
+          thinkingLevel: undefined,
+          resumeSessionId: undefined,
+        },
+        { extensions: false },
+      );
+      sessions.push(session);
+      const result = sdkCreate.mock.results.at(-1)!;
+      if (result.type !== "return") throw new Error("SDK session creation failed");
+      const { session: sdk } = await result.value;
+      expect(sdk.getActiveToolNames()).not.toContain("powershell");
+      const bash = sdk.agent.state.tools.find((tool: PiTool) => tool.name === "bash");
+      if (!bash) throw new Error("Missing bash tool");
+      return () =>
+        bash.execute("env-test", {
+          command: 'printf "%s:%s" "$PAPERPLANE_TEST_SESSION_ENV" "$PI_SESSION_ID"',
+        });
+    };
+    const first = await run("first");
+    const second = await run("second");
+    const [firstResult, secondResult] = await Promise.all([first(), second()]);
+    expect(firstResult.content).toEqual([
+      { type: "text", text: `first:${sessions[0]!.sessionId}` },
+    ]);
+    expect(secondResult.content).toEqual([
+      { type: "text", text: `second:${sessions[1]!.sessionId}` },
+    ]);
+    expect((await first()).content).toEqual(firstResult.content);
+    expect(process.env.PAPERPLANE_TEST_SESSION_ENV).toBe(original);
+  });
+
+  it("passes the prepared environment through the SDK PowerShell spawn hook", async () => {
+    const sdk = await vi.importActual<typeof PiSdk>("@earendil-works/pi-coding-agent");
+    // PowerShell is optional on Unix. Replace only its process execution backend.
+    vi.spyOn(PiSdk, "createPowerShellToolDefinition").mockImplementation((cwd, options) =>
+      sdk.createPowerShellToolDefinition(cwd, {
+        ...options,
+        operations: {
+          exec: async (_command, _cwd, execution) => {
+            execution.onData(Buffer.from(execution.env?.SESSION_ENV ?? "missing"));
+            return { exitCode: 0 };
+          },
+        },
+      }),
+    );
+    const session = await createPiSession(
+      {
+        cwd,
+        environment: { ...process.env, SESSION_ENV: "prepared-powershell" },
+        model: undefined,
+        thinkingLevel: undefined,
+        resumeSessionId: undefined,
+      },
+      { extensions: false },
+    );
+    sessions.push(session);
+    const sdkSession = (
+      await vi.mocked(PiSdk.createAgentSessionFromServices).mock.results.at(-1)!.value
+    ).session;
+    sdkSession.setActiveToolsByName(["powershell"]);
+    const powershell = sdkSession.agent.state.tools.find(
+      (tool: PiTool) => tool.name === "powershell",
+    );
+    if (!powershell) throw new Error("Missing PowerShell tool");
+    expect(
+      (await powershell.execute("powershell-env", { command: "$env:SESSION_ENV" })).content,
+    ).toEqual([{ type: "text", text: "prepared-powershell" }]);
+  });
 
   it("installs thread-authorized Paperplane tools even with user extensions disabled", async () => {
     const threadId = ThreadId.make("pi-paperplane-tools");

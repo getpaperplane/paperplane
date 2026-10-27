@@ -583,7 +583,7 @@ export function ProjectDefaultsSettings({ category }: { category: ProjectSetting
               mixed={mixedGithubAccount}
               id={searchableSetting("github-account").id}
               title="GitHub account"
-              description="Pull requests, pushes, and pulls from Paperplane act as this account (HTTPS remotes). Agent-run gh and git commands use their own sign-in."
+              description="Pull requests, pushes, pulls, and agent-run gh and git commands act as this account (HTTPS remotes)."
               resetAction={
                 settings.githubAccount ? (
                   <SettingResetButton

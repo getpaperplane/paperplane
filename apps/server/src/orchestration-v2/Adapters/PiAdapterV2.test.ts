@@ -195,12 +195,17 @@ function turnInput(
     },
   };
 }
-const setup = Effect.fn(function* (text = "hello", initialBranch: PiSessionEntryLike[] = []) {
+const setup = Effect.fn(function* (
+  text = "hello",
+  initialBranch: PiSessionEntryLike[] = [],
+  prepareEnvironment?: ProviderAdapter.ProviderAdapterV2OpenSessionInput["prepareEnvironment"],
+) {
   const raw = rawSession(initialBranch);
   const sessions = [raw];
   const creates: PiCreateSessionInput[] = [];
   const adapter = yield* makePiAdapterV2({
     instanceId,
+    environment: { INSTANCE_ENV: "pi" },
     createSession: async (input) => {
       creates.push(input);
       if (creates.length > 1) sessions.push(rawSession());
@@ -210,6 +215,7 @@ const setup = Effect.fn(function* (text = "hello", initialBranch: PiSessionEntry
   const runtime = yield* adapter.openSession({
     threadId,
     providerSessionId: ProviderSessionId.make("runtime"),
+    ...(prepareEnvironment ? { prepareEnvironment } : {}),
     modelSelection: selection,
     runtimePolicy: policy,
   });
@@ -533,7 +539,15 @@ import { CheckpointId } from "@getpaperplane/contracts";
 
 it.effect.each([false, true])("resumes the durable session after a worker crash, idle=%s", (idle) =>
   Effect.gen(function* () {
-    const h = yield* setup();
+    let preparations = 0;
+    const h = yield* setup("hello", [], (environment) =>
+      Effect.sync(() => {
+        preparations += 1;
+        assert.deepEqual(environment, { INSTANCE_ENV: "pi" });
+        return { ...environment, SESSION_ENV: "prepared" };
+      }),
+    );
+    assert.deepEqual(h.creates[0]?.environment, { INSTANCE_ENV: "pi", SESSION_ENV: "prepared" });
     if (idle) {
       h.raw.settle();
       yield* Deferred.await(h.terminal);
@@ -559,6 +573,8 @@ it.effect.each([false, true])("resumes the durable session after a worker crash,
       providerTurnOrdinal: 2,
       attemptId: RunAttemptId.make("second"),
     });
+    assert.strictEqual(preparations, 1);
+    assert.deepEqual(h.creates[1]?.environment, { INSTANCE_ENV: "pi", SESSION_ENV: "prepared" });
     const resumed = h.sessions[1]!;
     yield* Effect.promise(() => resumed.prompted);
     assert.strictEqual(h.creates[1]?.resumeSessionFile, h.raw.session.sessionFile);

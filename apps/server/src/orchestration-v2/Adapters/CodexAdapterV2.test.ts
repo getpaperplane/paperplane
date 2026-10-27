@@ -794,8 +794,12 @@ describe("CodexAdapterV2 process spawning", () => {
   it.effect("expands ~ in the configured binary path before spawning", () =>
     Effect.gen(function* () {
       const spawnedCommands: Array<string> = [];
+      const spawnedEnvironments: Array<NodeJS.ProcessEnv | undefined> = [];
       const spawner = ChildProcessSpawner.make((command) => {
-        if (ChildProcess.isStandardCommand(command)) spawnedCommands.push(command.command);
+        if (ChildProcess.isStandardCommand(command)) {
+          spawnedCommands.push(command.command);
+          spawnedEnvironments.push(command.options.env);
+        }
         return Effect.fail(
           PlatformError.systemError({ _tag: "NotFound", module: "ChildProcess", method: "spawn" }),
         );
@@ -804,7 +808,7 @@ describe("CodexAdapterV2 process spawning", () => {
       const adapter = yield* CodexAdapterV2.createCodexAdapterV2({
         instanceId: CodexAdapterV2.CODEX_DEFAULT_INSTANCE_ID,
         displayName: undefined,
-        environment: [],
+        environment: [{ name: "INSTANCE_ENV", value: "codex", sensitive: false }],
         enabled: true,
         config: { ...DEFAULT_CODEX_SETTINGS, binaryPath: "~/bin/codex" },
       }).pipe(
@@ -825,12 +829,19 @@ describe("CodexAdapterV2 process spawning", () => {
         .openSession({
           threadId: ThreadId.make("thread-binary-home"),
           providerSessionId: ProviderSessionId.make("provider-session-binary-home"),
+          prepareEnvironment: (environment) =>
+            Effect.sync(() => {
+              assert.equal(environment.INSTANCE_ENV, "codex");
+              return { ...environment, SESSION_ENV: "prepared" };
+            }),
           modelSelection: CODEX_TEST_MODEL_SELECTION,
           runtimePolicy: CODEX_TEST_RUNTIME_POLICY,
         })
         .pipe(Effect.scoped, Effect.exit);
 
       assert.deepEqual(spawnedCommands, [path.join(NodeOS.homedir(), "bin", "codex")]);
+      assert.equal(spawnedEnvironments[0]?.INSTANCE_ENV, "codex");
+      assert.equal(spawnedEnvironments[0]?.SESSION_ENV, "prepared");
     }).pipe(
       Effect.provide(
         Layer.mergeAll(IdAllocator.layer, McpProviderSessions.layer, NodeServices.layer),

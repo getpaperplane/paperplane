@@ -368,12 +368,22 @@ read -r release`,
     return result;
   }
 
-  async start(command: string, cwd: string, owner: string, signal?: AbortSignal) {
+  async start(
+    command: string,
+    cwd: string,
+    owner: string,
+    signal?: AbortSignal,
+    environment?: NodeJS.ProcessEnv,
+  ) {
     return this.launch(
       command,
       cwd,
       "background",
-      { onData: () => {}, ...(signal ? { signal } : {}) },
+      {
+        onData: () => {},
+        ...(signal ? { signal } : {}),
+        ...(environment ? { env: environment } : {}),
+      },
       owner,
     );
   }
@@ -407,8 +417,15 @@ read -r release`,
     await Promise.allSettled(this.running);
   }
 
-  tools(cwd: string, owner: string): ToolDefinition[] {
-    const bash = createBashToolDefinition(cwd, { operations: { exec: this.exec.bind(this) } });
+  tools(cwd: string, owner: string, environment?: NodeJS.ProcessEnv): ToolDefinition[] {
+    const bash = createBashToolDefinition(cwd, {
+      operations: { exec: this.exec.bind(this) },
+      ...(environment === undefined
+        ? {}
+        : {
+            spawnHook: (context) => ({ ...context, env: { ...context.env, ...environment } }),
+          }),
+    });
     const text = (value: unknown) => ({
       content: [{ type: "text" as const, text: JSON.stringify(value) }],
       details: {},
@@ -437,6 +454,7 @@ read -r release`,
               cwd,
               owner,
               signal,
+              environment,
             ),
           ),
       },
