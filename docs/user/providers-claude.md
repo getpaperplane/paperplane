@@ -67,9 +67,10 @@ timestamp shows when the displayed wait started.
 
 ## Skills
 
-Claude skills come from the config directory's `skills` folder and the project's
-`.claude/skills` folder. If both define the same name, the config-directory copy
-wins. Skills disabled in Claude's settings do not appear in the composer.
+Claude skills come from the config directory's `skills` folder, the project's
+`.claude/skills` folder, and the shared `~/.agents/skills` folder that other providers
+also read. If more than one defines the same name, the config-directory copy wins, then
+the project copy. Skills disabled in Claude's settings do not appear in the composer.
 
 Use `$` in the composer to select a skill. Skills marked `disable-model-invocation`
 can still be started by you. Invoke those one per message: Claude directly runs

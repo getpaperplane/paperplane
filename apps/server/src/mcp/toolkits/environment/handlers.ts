@@ -1,6 +1,7 @@
 import { OrchestratorMcpFailure, type ServerSettings } from "@getpaperplane/contracts";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
+import * as AgentSkills from "../../../agentSkills/AgentSkills.ts";
 import * as Environment from "../../../environment/ServerEnvironment.ts";
 import * as HostHealth from "../../../diagnostics/HostHealth.ts";
 import * as ThreadCommandExecutor from "../../../orchestration-v2/ThreadCommandExecutor.ts";
@@ -43,6 +44,20 @@ const access = Effect.gen(function* () {
   return { ...context, descriptor, settings: yield* Settings.ServerSettingsService };
 });
 export const layer = McpToolAccess.toLayer(EnvironmentToolkit, {
+  paperplane_agent_skills_status: McpToolAccess.reads((params: { readonly fetch?: boolean }) =>
+    Effect.gen(function* () {
+      const skills = yield* AgentSkills.AgentSkills;
+      return yield* skills
+        .getStatus({ fetch: params.fetch === true })
+        .pipe(Effect.mapError(unavailable));
+    }),
+  ),
+  paperplane_agent_skills_sync: McpToolAccess.writesEnvironment(() =>
+    Effect.gen(function* () {
+      const skills = yield* AgentSkills.AgentSkills;
+      return yield* skills.sync().pipe(Effect.mapError(unavailable));
+    }),
+  ),
   paperplane_environment_read: McpToolAccess.reads(() =>
     Effect.gen(function* () {
       const { descriptor, settings } = yield* access;

@@ -239,6 +239,15 @@ provider. On mobile, both are also available before starting a thread on
 The slash menu also includes skills unless you turn off **Settings → General →
 Show skills in slash menu**. Only skills enabled for the provider are listed.
 
+### Shared skills across providers and machines
+
+Put a skill in `~/.agents/skills` to make it available to every provider on that machine.
+**Settings → Skills** lists each environment's skills, shows which ones are missing or
+different on other environments, and can keep the folder in a private git repository.
+Choose **Set up repository** on each machine with the same remote URL, then **Sync** to
+pull changes from other machines and push your own. When a skill changed on two machines
+at once, Paperplane stops and leaves the folder for you to resolve with git.
+
 After you add or change skills, plugins, or MCP servers, use **Restart agent
 session** in the command palette on web and desktop. The conversation continues,
 and your next message starts the agent again with the new setup.

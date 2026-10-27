@@ -4,9 +4,13 @@
  * Claude Code loads skills from `<config dir>/skills` (user scope) and
  * `<cwd>/.claude/skills` (project scope), one directory per skill with a
  * `SKILL.md` carrying YAML frontmatter. The user root wins on name collisions,
- * matching the CLI. `.agents/skills` is a Codex location: verified against the
- * CLI, a skill that lives only there is answered with `Unknown command`, so it
- * is not scanned here.
+ * matching the CLI.
+ *
+ * `~/.agents/skills` (shared scope) is the cross-provider folder Pi, Codex,
+ * Cursor, Antigravity and OpenCode read. Claude Code does not scan it on its
+ * own, so Paperplane bridges it in via `additionalDirectories` (see
+ * ClaudeSharedSkillsBridge); once bridged, its skills load, which is why it is
+ * scanned here last. A same-named user or project copy still wins.
  * The Agent SDK init handshake surfaces skills only as slash commands without
  * their filesystem paths, so the provider snapshot scans the same locations
  * directly, mirroring how the Codex app-server reports its skills.
@@ -25,7 +29,7 @@ import { parse as parseYamlDocument } from "yaml";
 
 import { expandHomePath } from "@getpaperplane/provider-core/server/pathExpansion";
 
-type ClaudeSkillScope = "user" | "project";
+type ClaudeSkillScope = "user" | "project" | "shared";
 
 const FRONTMATTER_PATTERN = /^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/;
 
@@ -329,12 +333,14 @@ export const discoverClaudeSkills = Effect.fn("discoverClaudeSkills")(function* 
 ): Effect.fn.Return<ReadonlyArray<ServerProviderSkill>, never, FileSystem.FileSystem | Path.Path> {
   const fileSystem = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
+  const home = yield* HostProcess.HomeDirectory;
   const configDirPath = yield* resolveClaudeConfigDirPath(config, environment ?? process.env, cwd);
   const skillOverrides = yield* readSkillOverrides(configDirPath, cwd, environment ?? process.env);
 
   const roots: ReadonlyArray<{ directory: string; scope: ClaudeSkillScope }> = [
     { directory: path.join(configDirPath, "skills"), scope: "user" },
     ...(cwd ? [{ directory: path.join(cwd, ".claude", "skills"), scope: "project" as const }] : []),
+    { directory: path.join(home, ".agents", "skills"), scope: "shared" },
   ];
 
   const skillsByName = new Map<string, ServerProviderSkill>();

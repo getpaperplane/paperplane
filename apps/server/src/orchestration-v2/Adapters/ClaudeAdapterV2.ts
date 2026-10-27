@@ -119,7 +119,9 @@ import { signalProcessGroup } from "@getpaperplane/provider-core/server/processG
 import {
   claudeSignedOutMessage,
   makeClaudeEnvironment,
+  resolveClaudeHomePath,
 } from "../../provider/Drivers/ClaudeHome.ts";
+import { ensureClaudeSharedSkillsBridge } from "../../provider/Drivers/ClaudeSharedSkillsBridge.ts";
 import {
   BUNDLED_CLAUDE_MODEL_CATALOG,
   resolveClaudeCatalogContextWindowTokens,
@@ -1109,6 +1111,8 @@ export function makeClaudeQueryOptions(input: {
    * state.sqlite stay ungranted.
    */
   readonly attachmentsDir?: string;
+  /** Bridge directory exposing `~/.agents/skills` to Claude Code; see ClaudeSharedSkillsBridge. */
+  readonly sharedSkillsBridgeDir?: string;
   readonly settings?: ClaudeSettings;
   readonly sdkSettings?: string | ClaudeSdkSettings;
   readonly environment?: NodeJS.ProcessEnv;
@@ -1212,6 +1216,7 @@ export function makeClaudeQueryOptions(input: {
   const additionalDirectories = [
     ...(input.cwd === null ? [] : [input.cwd]),
     ...(input.attachmentsDir === undefined ? [] : [input.attachmentsDir]),
+    ...(input.sharedSkillsBridgeDir === undefined ? [] : [input.sharedSkillsBridgeDir]),
   ];
   const withDirectories =
     additionalDirectories.length === 0 ? options : { ...options, additionalDirectories };
@@ -1238,6 +1243,7 @@ export const CLAUDE_READ_ONLY_PAPERPLANE_MCP_ALLOWED_TOOLS: ReadonlyArray<string
   "paperplane_thread_search",
   "paperplane_preview_list",
   "paperplane_environment_read",
+  "paperplane_agent_skills_status",
   "paperplane_queue_list",
   "paperplane_queue_read",
   "html_preview",
@@ -3495,6 +3501,12 @@ export interface ClaudeAdapterV2Options {
   readonly queryRunner: ClaudeAgentSdkQueryRunnerShape;
   readonly scopedLimitNames?: Ref.Ref<ClaudeScopedLimitNames>;
   readonly onUsageLimits?: ManagedServerProvider["applyUsageLimits"];
+  /**
+   * Paperplane state dir, where the `~/.agents/skills` bridge is kept. Defaults
+   * to the attachments dir's parent, which is how `deriveServerPaths` lays out
+   * the state dir.
+   */
+  readonly stateDir?: string;
   /** Sink for wake-turn continuation requests; defaults to dropping them. */
   readonly continuationRequests?: {
     readonly offer: (
@@ -3508,6 +3520,17 @@ export const makeClaudeAdapterV2 = Effect.fn("makeClaudeAdapterV2")(function* (
 ) {
   const mcpSessions = yield* McpProviderSessions.McpProviderSessions;
   const { attachmentsDir, fileSystem, path, crypto, idAllocator, queryRunner } = adapterOptions;
+  // Claude Code cannot see ~/.agents/skills on its own; bridge it in once per
+  // adapter so every turn grants the same directory. Best-effort: no bridge
+  // when the folder is absent or the bridge cannot be written.
+  const sharedSkillsBridgeDir = yield* ensureClaudeSharedSkillsBridge({
+    stateDir: adapterOptions.stateDir ?? path.dirname(attachmentsDir),
+    home: yield* HostProcess.HomeDirectory,
+    claudeConfigDir: yield* resolveClaudeHomePath(
+      adapterOptions.settings,
+      adapterOptions.environment,
+    ),
+  });
   // Subagent model names and effort levels, including the instance's custom models.
   const subagentModelCatalog = scopeClaudeModelCatalog(
     BUNDLED_CLAUDE_MODEL_CATALOG,
@@ -8654,6 +8677,7 @@ export const makeClaudeAdapterV2 = Effect.fn("makeClaudeAdapterV2")(function* (
             ...(resumeSessionAt === undefined ? {} : { resumeSessionAt }),
             cwd: turnInput.runtimePolicy.cwd,
             attachmentsDir,
+            ...(sharedSkillsBridgeDir === undefined ? {} : { sharedSkillsBridgeDir }),
             settings: adapterOptions.settings,
             environment,
             tools: queryPolicy.tools ?? CLAUDE_CODE_PRESET_TOOLS,
@@ -9741,6 +9765,7 @@ export const createClaudeAdapterV2 = Effect.fn("ClaudeAdapterV2Driver.create")(
       settings: { ...config, enabled, binaryPath },
       environment: claudeEnvironment,
       attachmentsDir: serverConfig.attachmentsDir,
+      stateDir: serverConfig.stateDir,
       fileSystem,
       path,
       crypto,
@@ -9789,6 +9814,7 @@ const makeDefaultClaudeAdapterV2 = Effect.fn("ClaudeAdapterV2.layer")(function* 
     settings: DEFAULT_CLAUDE_SETTINGS,
     environment: hostEnvironment,
     attachmentsDir: serverConfig.attachmentsDir,
+    stateDir: serverConfig.stateDir,
     fileSystem,
     path,
     crypto,

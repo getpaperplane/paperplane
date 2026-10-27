@@ -1,4 +1,5 @@
 import {
+  AgentSkillsStatus,
   BackgroundActivityProfile,
   BackgroundActivityProfileSelection,
   ExecutionEnvironmentDescriptor,
@@ -9,6 +10,7 @@ import {
 } from "@getpaperplane/contracts";
 import * as Schema from "effect/Schema";
 import { Tool, Toolkit } from "effect/ai";
+import * as AgentSkills from "../../../agentSkills/AgentSkills.ts";
 import * as ServerEnvironment from "../../../environment/ServerEnvironment.ts";
 import * as HostHealth from "../../../diagnostics/HostHealth.ts";
 import * as ThreadCommandExecutor from "../../../orchestration-v2/ThreadCommandExecutor.ts";
@@ -37,6 +39,7 @@ const shared = {
     ServerEnvironment.ServerEnvironment,
     Settings.ServerSettingsService,
     ThreadCommandExecutor.ThreadCommandExecutor,
+    AgentSkills.AgentSkills,
   ],
 };
 const EnvironmentReadTool = Tool.make("paperplane_environment_read", {
@@ -68,4 +71,26 @@ const EnvironmentPreferencesTool = Tool.make("paperplane_environment_preferences
   }),
   success: Schema.Struct(PreferenceFields),
 }).annotate(Tool.Destructive, true);
-export const EnvironmentToolkit = Toolkit.make(EnvironmentReadTool, EnvironmentPreferencesTool);
+const AgentSkillsStatusTool = Tool.make("paperplane_agent_skills_status", {
+  ...shared,
+  description:
+    "Read the shared agent skills folder (~/.agents/skills) on this machine: its skills and, when it is a git repository, whether it is ahead of, behind, or diverged from its remote. Pass fetch=true to refresh the remote state first.",
+  parameters: Schema.Struct({
+    fetch: Schema.optionalKey(Schema.Boolean),
+  }),
+  success: AgentSkillsStatus,
+})
+  .annotate(Tool.Readonly, true)
+  .annotate(Tool.Destructive, false);
+const AgentSkillsSyncTool = Tool.make("paperplane_agent_skills_sync", {
+  ...shared,
+  description:
+    "Sync the shared agent skills folder with its git remote: commit local changes, fast-forward from the remote, and push. Refuses when local and remote both changed (diverged); resolve that in the folder by hand. Requires the folder to be a git repository with a remote.",
+  success: AgentSkillsStatus,
+}).annotate(Tool.Destructive, true);
+export const EnvironmentToolkit = Toolkit.make(
+  EnvironmentReadTool,
+  EnvironmentPreferencesTool,
+  AgentSkillsStatusTool,
+  AgentSkillsSyncTool,
+);
