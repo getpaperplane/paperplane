@@ -1,4 +1,5 @@
 import * as Exit from "effect/Exit";
+import * as Context from "effect/Context";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as Effect from "effect/Effect";
@@ -10,6 +11,7 @@ import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, it } from "@effect/vitest";
 
 import * as CodexClient from "./client.ts";
+import * as CodexError from "./errors.ts";
 
 const mockPeerPath = Effect.map(Effect.service(Path.Path), (path) =>
   path.join(import.meta.dirname, "../test/fixtures/codex-app-server-mock-peer.ts"),
@@ -124,6 +126,25 @@ it.layer(NodeServices.layer)("effect-codex-app-server client", (it) => {
       ]);
     }),
   );
+  it.effect.each([0, 7])(
+    "reports an idle process exit with code %s without a pending request",
+    (code) =>
+      Effect.gen(function* () {
+        const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+        const handle = yield* spawner.spawn(
+          ChildProcess.make(process.execPath, ["-e", `process.exit(${code})`]),
+        );
+        const context = yield* Layer.build(CodexClient.layerChildProcess(handle));
+        const client = context.pipe(Context.get(CodexClient.CodexAppServerClient));
+        const error = yield* client.awaitTermination;
+        assert.instanceOf(error, CodexError.CodexAppServerProcessExitedError);
+        assert.equal(error.code, code);
+        assert.equal(error.pid, handle.pid);
+        // Late observers must see the same exit, not wait for another one.
+        assert.strictEqual(yield* client.awaitTermination, error);
+      }),
+  );
+
   it.effect("drains child stderr so large diagnostics cannot block protocol responses", () =>
     Effect.gen(function* () {
       const handle = yield* makeHandle({

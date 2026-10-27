@@ -4253,6 +4253,9 @@ describe("orchestrator MCP toolkit", () => {
               ),
             );
           const finishedParent = yield* orchestrator.getThreadProjection(parentThreadId);
+          // The shared app-server must stay alive after the child finishes:
+          // the parent still owns the run making the final MCP calls.
+          expect(finishedParent.runs.at(-1)?.status).toBe("running");
           expect(
             finishedParent.subagents.find((task) => task.id === followupTasks[0]!.id)?.status,
           ).toBe("interrupted");

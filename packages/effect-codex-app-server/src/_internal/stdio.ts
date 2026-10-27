@@ -55,7 +55,12 @@ export const makeTerminationError = (
 ): Effect.Effect<CodexError.CodexAppServerError> =>
   Effect.match(handle.exitCode, {
     onFailure: (cause) => {
-      const signal = /receipt of signal: '(\w+)'/.exec(cause.message)?.[1];
+      // Node's spawner puts signal details in SystemError.cause, not in the
+      // PlatformError message. Keep the description fallback for other hosts.
+      const underlying = cause.reason.cause;
+      const signal = /receipt of signal: '(SIG[A-Z0-9]+)'/.exec(
+        underlying instanceof Error ? underlying.message : cause.message,
+      )?.[1];
       return signal !== undefined
         ? new CodexError.CodexAppServerProcessExitedError({ signal, pid: handle.pid })
         : new CodexError.CodexAppServerTransportError({

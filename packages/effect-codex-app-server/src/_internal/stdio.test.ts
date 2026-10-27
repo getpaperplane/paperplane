@@ -43,6 +43,25 @@ describe("Codex App Server child process termination", () => {
     }),
   );
 
+  it.effect("recognizes the nested signal error emitted by the Node spawner", () =>
+    Effect.gen(function* () {
+      const error = yield* makeTerminationError({
+        pid: ChildProcessSpawner.ProcessId(54),
+        exitCode: Effect.fail(
+          PlatformError.systemError({
+            _tag: "Unknown",
+            module: "ChildProcess",
+            method: "exitCode",
+            cause: new Error("Process interrupted due to receipt of signal: 'SIGKILL'"),
+          }),
+        ),
+      });
+      assert.instanceOf(error, CodexError.CodexAppServerProcessExitedError);
+      assert.equal(error.signal, "SIGKILL");
+      assert.equal(error.pid, 54);
+    }),
+  );
+
   it.effect("retains the process identifier and exact exit-status cause", () =>
     Effect.gen(function* () {
       const rootCause = new Error("private process diagnostics");

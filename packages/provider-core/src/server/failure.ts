@@ -51,6 +51,18 @@ function causeMessage(cause: unknown): string | undefined {
           return stringField(cause, "message");
         case "ContextHandoffDeliveryUncertainError":
           return "Paperplane could not confirm whether conversation history reached the provider. Retry the turn to recover the session.";
+        case "CodexAppServerProcessExitedError": {
+          const exit = processExitEvidence(cause);
+          if (Option.isNone(exit)) break;
+          const { signal, code } = exit.value;
+          const reason =
+            signal !== undefined && /^SIG[A-Z0-9]{1,16}$/u.test(signal)
+              ? ` (signal ${signal})`
+              : code !== undefined && Number.isSafeInteger(code)
+                ? ` (exit code ${code})`
+                : "";
+          return `The Codex app-server exited${reason}. Retry the turn to start a new process.`;
+        }
         case "ProviderAdapterTurnStartError":
           message =
             "The provider could not start this turn. Retry the turn; if it keeps failing, check the provider setup and server logs.";

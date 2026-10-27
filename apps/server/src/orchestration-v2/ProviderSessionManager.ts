@@ -947,6 +947,20 @@ export const layerWithOptions = (
           { concurrency: 1 },
         ).pipe(Effect.flatMap(Exit.asVoidAll));
 
+      // The process may take time to close. Serialize the replacement check
+      // and status write with open(), which reuses the shared session id.
+      const writeCurrentReleaseRecords = (
+        input: Omit<Parameters<typeof writeReleaseRecords>[0], "replaced">,
+        holdsSessionOpenLock = false,
+      ) => {
+        const providerSessionId = input.entry.runtime.providerSessionId;
+        const write = Effect.gen(function* () {
+          const replaced = (yield* Ref.get(sessions)).has(sessionKey(providerSessionId));
+          yield* writeReleaseRecords({ ...input, replaced });
+        });
+        return holdsSessionOpenLock ? write : sessionOpen.withLock(providerSessionId, write);
+      };
+
       // The session already left the live map, so a later release finds
       // nothing to do. Without a retry the UI would keep a ready session and
       // answerable approvals until a server restart. Each attempt holds the
@@ -956,15 +970,9 @@ export const layerWithOptions = (
       ) => {
         const providerSessionId = input.entry.runtime.providerSessionId;
         const attempt = Effect.gen(function* () {
-          const exit = yield* Effect.exit(
-            sessionOpen.withLock(
-              providerSessionId,
-              Effect.gen(function* () {
-                const replaced = (yield* Ref.get(sessions)).has(sessionKey(providerSessionId));
-                yield* writeReleaseRecords({ ...input, replaced });
-              }),
-            ),
-          );
+          // This runs in a delayed background fiber, after an open() caller
+          // has released its lock. It must acquire the lock itself.
+          const exit = yield* Effect.exit(writeCurrentReleaseRecords(input));
           if (Exit.isSuccess(exit) || Cause.hasInterruptsOnly(exit.cause)) return yield* exit;
           yield* Effect.logWarning("orchestration-v2.provider-session-release-records-failed", {
             providerSessionId,
@@ -1091,6 +1099,8 @@ export const layerWithOptions = (
         readonly cancelIdleFiber?: boolean;
         readonly onlyIfIdleGeneration?: number;
         readonly gracefulSubscribers?: boolean;
+        /** open() already holds the non-reentrant session lock. */
+        readonly holdsSessionOpenLock?: boolean;
       }) =>
         Effect.acquireUseRelease(
           removeLiveEntry(input),
@@ -1131,7 +1141,7 @@ export const layerWithOptions = (
                     releasedAt,
                   };
                   const recorded = yield* Effect.exit(
-                    writeReleaseRecords({ ...records, replaced: false }),
+                    writeCurrentReleaseRecords(records, input.holdsSessionOpenLock),
                   );
                   if (Exit.isFailure(recorded)) {
                     yield* retryReleaseRecords(records);
@@ -1213,6 +1223,7 @@ export const layerWithOptions = (
           providerSessionId: entry.runtime.providerSessionId,
           reason: "manual_shutdown",
           detail: `Provider instance ${entry.runtime.instanceId} was reconfigured.`,
+          holdsSessionOpenLock: true,
         });
         return true;
       });
@@ -2442,11 +2453,13 @@ export const layerWithOptions = (
                           providerSessionId: input.providerSessionId,
                           reason: "manual_shutdown",
                           detail: "The provider session start was interrupted.",
+                          holdsSessionOpenLock: true,
                         }
                       : {
                           providerSessionId: input.providerSessionId,
                           reason: "runtime_error",
                           detail: "Failed to persist the provider-session attachment.",
+                          holdsSessionOpenLock: true,
                         },
                   ).pipe(logReleaseFailure(input.providerSessionId)),
                 ),
