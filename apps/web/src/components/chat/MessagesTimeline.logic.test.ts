@@ -1097,6 +1097,44 @@ describe("deriveMessagesTimelineRows", () => {
     ]);
   });
 
+  it.each([
+    [{ beforeTokenCount: 5_000 }, "Context compacted from 5K tokens"],
+    [{ afterTokenCount: 2_000 }, "Context compacted to 2K tokens"],
+    [
+      { beforeTokenCount: 5_000, afterTokenCount: 2_000, tokenCountsEstimated: true },
+      "Context compacted ≈5K → ≈2K tokens",
+    ],
+  ])("preserves partial compaction counts %j alongside a summary", (counts, label) => {
+    const fixture = makeStreamingTimelineFixture();
+    const last = fixture.visibleTurnItems.at(-1)!;
+    if (last.item.type !== "assistant_message") throw new Error("Expected assistant fixture");
+    const timelineEntries = deriveTimelineEntriesFromVisibleTurnItems({
+      visibleTurnItems: [
+        {
+          ...last,
+          item: {
+            ...last.item,
+            type: "compaction",
+            status: "completed",
+            driver: null,
+            summary: "Retained the current task",
+            ...counts,
+          },
+        },
+      ],
+      optimisticMessages: [],
+    });
+    const rows = deriveMessagesTimelineRows({
+      isWorking: false,
+      runningRunId: null,
+      activeTurnStartedAt: null,
+      turnDiffSummaries: [],
+      supportsConversationRollback: false,
+      timelineEntries,
+    });
+    expect(rows.find((row) => row.kind === "context-compaction")).toMatchObject({ label });
+  });
+
   it("gives live compaction the activity slot and restores Thinking when it completes", () => {
     const fixture = makeStreamingTimelineFixture();
     const last = fixture.visibleTurnItems.at(-1)!;

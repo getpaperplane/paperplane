@@ -265,15 +265,17 @@ export function buildThreadActivityInspector(
       );
       addBlock(blocks, "Explanation", item.explanation, false);
       break;
-    case "compaction":
+    case "compaction": {
       addBlock(blocks, "Summary", item.summary, false);
       if (item.beforeTokenCount !== undefined || item.afterTokenCount !== undefined) {
-        fields.push({
-          label: "Context tokens",
-          value: `${item.beforeTokenCount ?? "?"} → ${item.afterTokenCount ?? "?"}`,
-        });
+        const prefix = item.tokenCountsEstimated ? "≈" : "";
+        const before =
+          item.beforeTokenCount === undefined ? "?" : `${prefix}${item.beforeTokenCount}`;
+        const after = item.afterTokenCount === undefined ? "?" : `${prefix}${item.afterTokenCount}`;
+        fields.push({ label: "Context tokens", value: `${before} → ${after}` });
       }
       break;
+    }
     case "run_interrupt_request":
     case "run_interrupt_result":
       addBlock(blocks, "Message", item.message, false);

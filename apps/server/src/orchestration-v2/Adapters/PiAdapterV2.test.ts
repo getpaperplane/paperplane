@@ -696,6 +696,7 @@ it.effect.each(["aborted", "error", "success"])("publishes %s compaction accurat
     h.raw.emit({
       type: "compaction_end",
       aborted: outcome === "aborted",
+      result: { summary: "Retained context", tokensBefore: 5000, estimatedTokensAfter: 2000 },
       ...(outcome === "error" ? { errorMessage: "summary failed" } : {}),
     });
     h.raw.settle();
@@ -707,6 +708,19 @@ it.effect.each(["aborted", "error", "success"])("publishes %s compaction accurat
       item?.type === "turn_item.updated" && item.turnItem.status,
       outcome === "aborted" ? "interrupted" : outcome === "error" ? "failed" : "completed",
     );
+    if (item?.type !== "turn_item.updated" || item.turnItem.type !== "compaction")
+      return assert.fail("Expected a compaction item");
+    if (outcome === "success") {
+      assert.strictEqual(item.turnItem.summary, "Retained context");
+      assert.strictEqual(item.turnItem.beforeTokenCount, 5000);
+      assert.strictEqual(item.turnItem.afterTokenCount, 2000);
+      assert.strictEqual(item.turnItem.tokenCountsEstimated, true);
+    } else {
+      assert.notProperty(item.turnItem, "beforeTokenCount");
+      assert.notProperty(item.turnItem, "afterTokenCount");
+      assert.notProperty(item.turnItem, "tokenCountsEstimated");
+      assert.strictEqual(item.turnItem.summary, outcome === "error" ? "summary failed" : undefined);
+    }
     if (outcome === "error")
       assert.strictEqual(
         item?.type === "turn_item.updated" &&
@@ -714,6 +728,97 @@ it.effect.each(["aborted", "error", "success"])("publishes %s compaction accurat
           item.turnItem.summary,
         "summary failed",
       );
+  }).pipe(Effect.scoped, Effect.provide(layer)),
+);
+
+it.effect.each(["manual", "threshold", "overflow"])(
+  "retains Pi's estimated compaction counts for %s compaction",
+  (reason) =>
+    Effect.gen(function* () {
+      const h = yield* setup(reason === "manual" ? "/compact" : "hello");
+      h.raw.emit({ type: "compaction_start", reason });
+      h.raw.emit({
+        type: "compaction_end",
+        reason,
+        aborted: false,
+        result: {
+          summary: "x".repeat(2000),
+          tokensBefore: 5000,
+          estimatedTokensAfter: 2000,
+        },
+      });
+      h.raw.settle();
+      yield* Deferred.await(h.terminal);
+      const event = h.events
+        .filter(
+          (event) => event.type === "turn_item.updated" && event.turnItem.type === "compaction",
+        )
+        .at(-1);
+      if (event?.type !== "turn_item.updated" || event.turnItem.type !== "compaction")
+        return assert.fail("Expected a compaction item");
+      assert.strictEqual(event.turnItem.status, "completed");
+      assert.strictEqual(event.turnItem.beforeTokenCount, 5000);
+      assert.strictEqual(event.turnItem.afterTokenCount, 2000);
+      assert.strictEqual(event.turnItem.tokenCountsEstimated, true);
+      assert.strictEqual(event.turnItem.summary, `${"x".repeat(1023)}…`);
+    }).pipe(Effect.scoped, Effect.provide(layer)),
+);
+
+it.effect.each([
+  { label: "before only", result: { tokensBefore: 5000 }, before: 5000, after: undefined },
+  { label: "after only", result: { estimatedTokensAfter: 2000 }, before: undefined, after: 2000 },
+  { label: "zero", result: { tokensBefore: 0, estimatedTokensAfter: 0 }, before: 0, after: 0 },
+  { label: "missing", result: {}, before: undefined, after: undefined },
+  { label: "null", result: null, before: undefined, after: undefined },
+  {
+    label: "negative",
+    result: { tokensBefore: -1, estimatedTokensAfter: 2000 },
+    before: undefined,
+    after: 2000,
+  },
+  {
+    label: "fractional",
+    result: { tokensBefore: 5000, estimatedTokensAfter: 1.5 },
+    before: 5000,
+    after: undefined,
+  },
+  {
+    label: "infinite",
+    result: { tokensBefore: Infinity, estimatedTokensAfter: -Infinity },
+    before: undefined,
+    after: undefined,
+  },
+  {
+    label: "NaN",
+    result: { tokensBefore: NaN, estimatedTokensAfter: NaN },
+    before: undefined,
+    after: undefined,
+  },
+  {
+    label: "wrong types",
+    result: { tokensBefore: "5000", estimatedTokensAfter: false },
+    before: undefined,
+    after: undefined,
+  },
+])("validates $label compaction counts without losing the result", ({ result, before, after }) =>
+  Effect.gen(function* () {
+    const h = yield* setup();
+    h.raw.emit({ type: "compaction_start" });
+    h.raw.emit({ type: "compaction_end", result, aborted: false });
+    h.raw.settle();
+    yield* Deferred.await(h.terminal);
+    const event = h.events
+      .filter((event) => event.type === "turn_item.updated" && event.turnItem.type === "compaction")
+      .at(-1);
+    if (event?.type !== "turn_item.updated" || event.turnItem.type !== "compaction")
+      return assert.fail("Expected a compaction item");
+    assert.strictEqual(event.turnItem.status, "completed");
+    assert.strictEqual(event.turnItem.beforeTokenCount, before);
+    assert.strictEqual(event.turnItem.afterTokenCount, after);
+    assert.strictEqual(
+      event.turnItem.tokenCountsEstimated,
+      before === undefined && after === undefined ? undefined : true,
+    );
   }).pipe(Effect.scoped, Effect.provide(layer)),
 );
 

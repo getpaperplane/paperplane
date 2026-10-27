@@ -137,6 +137,45 @@ const decodeOrchestrationV2SubscribeThreadInput = Schema.decodeUnknownSync(
 );
 
 describe("orchestration V2 contracts", () => {
+  it("preserves estimated compaction counts through persisted and wire schemas", () => {
+    const base = {
+      id: "compaction-item",
+      type: "compaction",
+      driver: "pi",
+      threadId: "thread-1",
+      runId: null,
+      nodeId: null,
+      providerThreadId: null,
+      providerTurnId: null,
+      nativeItemRef: null,
+      parentItemId: null,
+      ordinal: 1,
+      status: "completed",
+      title: "Context compacted",
+      startedAt: now,
+      completedAt: now,
+      updatedAt: now,
+      beforeTokenCount: 5000,
+      afterTokenCount: 2000,
+    };
+    const sendOverWire = Schema.encodeSync(Schema.toCodecJson(OrchestrationV2TurnItem));
+    for (const metadata of [{}, { tokenCountsEstimated: true }, { tokenCountsEstimated: false }]) {
+      const runtime = decodeOrchestrationV2TurnItem({ ...base, ...metadata });
+      for (const wire of [encodeOrchestrationV2TurnItemJson(runtime), sendOverWire(runtime)]) {
+        const decoded = decodeOrchestrationV2TurnItemJson(wire);
+        expect(decoded).toEqual(runtime);
+        expect(decoded).toMatchObject({
+          beforeTokenCount: 5000,
+          afterTokenCount: 2000,
+          ...metadata,
+        });
+        expect(decodeOrchestrationV2TurnItem(decoded)).toEqual(runtime);
+        if (!("tokenCountsEstimated" in metadata))
+          expect(decoded).not.toHaveProperty("tokenCountsEstimated");
+      }
+    }
+  });
+
   it("carries command failure metadata through runtime and JSON schemas without output text", () => {
     const base = {
       id: "command-item",

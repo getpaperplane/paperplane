@@ -1635,6 +1635,37 @@ describe("retained v2 feed presentation", () => {
     expect(afterPresentation[1]).toBe(beforePresentation[1]);
   });
 
+  it.each([
+    [{ beforeTokenCount: 5_000 }, "Context compacted from 5K tokens"],
+    [{ afterTokenCount: 2_000 }, "Context compacted to 2K tokens"],
+    [
+      { beforeTokenCount: 5_000, afterTokenCount: 2_000, tokenCountsEstimated: true },
+      "Context compacted ≈5K → ≈2K tokens",
+    ],
+  ])("preserves partial compaction counts %j alongside a summary", (counts, summary) => {
+    const compact = projected(
+      {
+        ...base("compacted", "2026-06-20T00:00:02.000Z", 1),
+        type: "compaction",
+        status: "completed",
+        driver: null,
+        summary: "Retained the current task",
+        ...counts,
+      },
+      1,
+    );
+    const rows = deriveThreadFeedPresentation(
+      buildThreadFeed([projected(userMessage(), 0), compact]),
+      null,
+      new Set(),
+      new Set(),
+      null,
+    );
+    expect(rows.find((row) => row.type === "activity-group")).toMatchObject({
+      activities: [{ summary }],
+    });
+  });
+
   it.each(["running", "completed", "interrupted"] as const)(
     "uses the compaction row as the live activity only while %s",
     (status) => {
@@ -1671,7 +1702,7 @@ describe("retained v2 feed presentation", () => {
                 ? "Compacting context"
                 : status === "completed"
                   ? "Context compacted 899K → 19K tokens"
-                  : "Context compacted",
+                  : "Context compaction stopped",
           },
         ],
       });

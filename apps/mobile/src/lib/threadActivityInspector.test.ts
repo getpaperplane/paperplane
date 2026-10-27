@@ -272,3 +272,27 @@ describe("buildThreadActivityInspector", () => {
     });
   });
 });
+
+it.each([false, true])(
+  "labels compaction count estimates in the inspector (%s)",
+  (tokenCountsEstimated) => {
+    const item: OrchestrationV2TurnItem = {
+      ...itemBase("compact"),
+      type: "compaction",
+      driver: null,
+      summary: "Retained the current task",
+      beforeTokenCount: 5_000,
+      afterTokenCount: 2_000,
+      tokenCountsEstimated,
+    };
+    const model = buildThreadActivityInspector(
+      activityFor(item),
+      EMPTY_V2_ITEM_SUPPORT,
+      sourceThreadId,
+    );
+    expect(model.fields).toContainEqual({
+      label: "Context tokens",
+      value: tokenCountsEstimated ? "≈5000 → ≈2000" : "5000 → 2000",
+    });
+  },
+);
