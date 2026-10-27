@@ -810,11 +810,14 @@ effectIt.effect(
       yield* harness.start;
 
       const projection = harness.projection();
-      const failure = projection.turnItems.at(-1)?.failure;
-      expect(failure?.message).toBe(
+      const persistedItem = projection.turnItems.at(-1);
+      if (persistedItem?.type !== "error") {
+        throw new Error("Expected a persisted provider error turn item.");
+      }
+      expect(persistedItem.failure.message).toBe(
         "Could not prepare the agent's GitHub account project-account on github.com. Check its sign-in or choose another account in Settings → Source Control.",
       );
-      expect(JSON.stringify(projection.turnItems.at(-1))).not.toContain(secret);
+      expect(JSON.stringify(persistedItem)).not.toContain(secret);
     }),
 );
 
