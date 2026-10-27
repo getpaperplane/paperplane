@@ -127,7 +127,7 @@ const parseAheadBehind = (out: string): { ahead: number; behind: number } => {
   return { ahead: ahead ?? 0, behind: behind ?? 0 };
 };
 
-export const make = (options: AgentSkillsOptions = {}) =>
+const make = (options: AgentSkillsOptions = {}) =>
   Effect.gen(function* () {
     const fileSystem = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;

@@ -350,6 +350,14 @@ const PAPERPLANE_MCP_TOOLS: Readonly<Record<string, PaperplaneMcpToolDefinition>
     ["Read", "Reading", "Read", "environment preferences"],
     "environment-read",
   ),
+  paperplane_agent_skills_status: tool(
+    ["Read", "Reading", "Read", "shared skills status"],
+    "environment-read",
+  ),
+  paperplane_agent_skills_sync: tool(
+    ["Sync", "Syncing", "Synced", "shared skills"],
+    "environment-update",
+  ),
   paperplane_environment_preferences_update: tool(
     ["Update", "Updating", "Updated", "environment preferences"],
     "environment-update",

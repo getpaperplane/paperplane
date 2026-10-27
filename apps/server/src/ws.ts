@@ -577,6 +577,9 @@ const CoreWsRpcGroup = ServerWsRpcGroup.omit(
   WS_METHODS.worktreeInventoryInspect,
   WS_METHODS.worktreeInventoryMeasure,
   WS_METHODS.worktreeInventoryRemove,
+  WS_METHODS.agentSkillsGetStatus,
+  WS_METHODS.agentSkillsInitRepository,
+  WS_METHODS.agentSkillsSync,
 );
 const layerPaperplaneWsRpc = Layer.unwrap(
   Effect.gen(function* () {
@@ -584,6 +587,7 @@ const layerPaperplaneWsRpc = Layer.unwrap(
     const sandboxes = yield* SandboxManager;
     const cuaDriver = yield* CuaDriver.CuaDriver;
     const inventory = yield* WorktreeInventory.WorktreeInventory;
+    const agentSkills = yield* AgentSkills.AgentSkills;
     return Layer.mergeAll(
       ServerWsRpcGroup.toLayerHandler(WS_METHODS.piGetCatalog, (input) =>
         providerRegistry.piCatalog(input),
@@ -621,6 +625,13 @@ const layerPaperplaneWsRpc = Layer.unwrap(
       ServerWsRpcGroup.toLayerHandler(WS_METHODS.worktreeInventoryRemove, (input) =>
         inventory.remove(input),
       ),
+      ServerWsRpcGroup.toLayerHandler(WS_METHODS.agentSkillsGetStatus, (input) =>
+        agentSkills.getStatus(input),
+      ),
+      ServerWsRpcGroup.toLayerHandler(WS_METHODS.agentSkillsInitRepository, (input) =>
+        agentSkills.initRepository(input),
+      ),
+      ServerWsRpcGroup.toLayerHandler(WS_METHODS.agentSkillsSync, () => agentSkills.sync()),
     );
   }),
 );
@@ -1363,7 +1374,6 @@ const layerCoreWsRpc = (
       const gitWorkflow = yield* GitWorkflowService.GitWorkflowService;
       const review = yield* ReviewService.ReviewService;
       const vcsProvisioning = yield* VcsProvisioningService.VcsProvisioningService;
-      const agentSkills = yield* AgentSkills.AgentSkills;
       const vcsStatusBroadcaster = yield* VcsStatusBroadcaster.VcsStatusBroadcaster;
       const terminalManager = yield* TerminalManager.TerminalManager;
       const previewManager = yield* PreviewManager.PreviewManager;
@@ -2989,9 +2999,6 @@ const layerCoreWsRpc = (
           gitWorkflow.switchRef(input).pipe(Effect.tap(() => refreshGitStatus(input.cwd))),
         [WS_METHODS.vcsInit]: (input) =>
           vcsProvisioning.initRepository(input).pipe(Effect.tap(() => refreshGitStatus(input.cwd))),
-        [WS_METHODS.agentSkillsGetStatus]: (input) => agentSkills.getStatus(input),
-        [WS_METHODS.agentSkillsInitRepository]: (input) => agentSkills.initRepository(input),
-        [WS_METHODS.agentSkillsSync]: () => agentSkills.sync(),
         [WS_METHODS.reviewGetDiffPreview]: (input) => review.getDiffPreview(input),
         [WS_METHODS.reviewGetDiffFileContents]: (input) => review.getDiffFileContents(input),
         [WS_METHODS.terminalOpen]: (input) => terminalManager.open(input),
