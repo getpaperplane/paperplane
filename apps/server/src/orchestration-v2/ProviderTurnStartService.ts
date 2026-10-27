@@ -27,6 +27,7 @@ import { withWorkspaceLease } from "../workspace/workspaceLease.ts";
 import * as GitWorkflowService from "../git/GitWorkflowService.ts";
 import * as ProjectService from "../project/ProjectService.ts";
 import * as ProviderAuthService from "../provider/ProviderAuthService.ts";
+import * as AgentGitHubEnvironment from "../provider/AgentGitHubEnvironment.ts";
 import * as EventSink from "./EventSink.ts";
 import * as ContextHandoffService from "./ContextHandoffService.ts";
 import {
@@ -559,6 +560,11 @@ export const layer: Layer.Layer<
       }) =>
         Effect.gen(function* () {
           const nestedCause = "cause" in failed.error ? failed.error.cause : undefined;
+          const githubError =
+            Schema.is(ProviderAdapter.ProviderAdapterOpenSessionError)(nestedCause) &&
+            Schema.is(AgentGitHubEnvironment.AgentGitHubEnvironmentError)(nestedCause.cause)
+              ? nestedCause.cause
+              : undefined;
           yield* settleRunBeforeStart({
             signal: failed.signal,
             status: "failed",
@@ -570,8 +576,9 @@ export const layer: Layer.Layer<
               title: failed.title,
               failure: makeProviderFailure({
                 cause: failed.error,
-                message:
-                  nestedCause instanceof Error
+                message: githubError
+                  ? githubError.message
+                  : nestedCause instanceof Error
                     ? nestedCause.message
                     : typeof nestedCause === "string"
                       ? nestedCause

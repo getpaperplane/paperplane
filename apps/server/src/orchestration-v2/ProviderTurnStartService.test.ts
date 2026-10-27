@@ -32,6 +32,7 @@ import { withWorkspaceLease } from "../workspace/workspaceLease.ts";
 import * as GitWorkflow from "../git/GitWorkflowService.ts";
 import * as ProjectService from "../project/ProjectService.ts";
 import * as ProviderAuthService from "../provider/ProviderAuthService.ts";
+import * as AgentGitHubEnvironment from "../provider/AgentGitHubEnvironment.ts";
 import * as ContextHandoffService from "./ContextHandoffService.ts";
 import * as EventSink from "./EventSink.ts";
 import * as IdAllocator from "@getpaperplane/provider-core/server/IdAllocator";
@@ -784,6 +785,37 @@ effectIt.effect("terminalizes a starting run when its provider session cannot op
       },
     ]);
   }),
+);
+
+effectIt.effect(
+  "persists a safe GitHub account setup error when a selected account cannot be prepared",
+  () =>
+    Effect.gen(function* () {
+      const secret = "gho-must-never-be-persisted";
+      const githubError = new AgentGitHubEnvironment.AgentGitHubEnvironmentError({
+        host: "github.com",
+        login: "project-account",
+        stage: "configuration",
+        cause: new Error(secret),
+      });
+      const harness = makeLocalCommandHarness({
+        text: "Continue",
+        openFailure: new ProviderAdapter.ProviderAdapterOpenSessionError({
+          driver: ProviderDriverKind.make("codex"),
+          providerSessionId: ProviderSessionId.make("github-config-open-failure"),
+          cause: githubError,
+        }),
+      });
+
+      yield* harness.start;
+
+      const projection = harness.projection();
+      const failure = projection.turnItems.at(-1)?.failure;
+      expect(failure?.message).toBe(
+        "Could not prepare the agent's GitHub account project-account on github.com. Check its sign-in or choose another account in Settings → Source Control.",
+      );
+      expect(JSON.stringify(projection.turnItems.at(-1))).not.toContain(secret);
+    }),
 );
 
 effectIt.effect("leaves the run starting when a session-open failure will be retried", () =>

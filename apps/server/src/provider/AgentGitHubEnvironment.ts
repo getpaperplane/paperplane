@@ -7,7 +7,7 @@ import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as Schema from "effect/Schema";
 import type * as Scope from "effect/Scope";
-import { isMap, parseDocument } from "yaml";
+import { isMap, parseDocument, YAMLMap } from "yaml";
 
 import * as ProcessRunner from "../processRunner.ts";
 
@@ -112,6 +112,12 @@ const make = Effect.gen(function* () {
           return yield* new AgentGitHubEnvironmentError({ host, login, stage: "configuration" });
         }
         yield* Effect.try(() => {
+          if (!isMap(document.getIn([host, "users"]))) {
+            document.setIn([host, "users"], new YAMLMap());
+          }
+          if (!isMap(document.getIn([host, "users", login]))) {
+            document.setIn([host, "users", login], new YAMLMap());
+          }
           document.setIn([host, "user"], login);
           document.setIn([host, "oauth_token"], token);
           document.setIn([host, "users", login, "oauth_token"], token);
