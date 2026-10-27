@@ -261,6 +261,9 @@ async function toPiSessionLike(
     get sessionFile() {
       return session.sessionFile;
     },
+    get resourceLoader() {
+      return session.resourceLoader;
+    },
     ...(resumeOutcome !== undefined ? { resumeOutcome } : undefined),
     ...(modelFallbackMessage !== undefined ? { modelFallbackMessage } : undefined),
     get isStreaming() {

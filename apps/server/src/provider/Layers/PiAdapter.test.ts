@@ -34,9 +34,25 @@ describe("Pi SDK boundary helpers", () => {
       parsePiResumeCursor({ sessionId: "id", turnBoundaries: [{ turnId: "turn" }] }),
     ).toThrow("turn boundary");
   });
-  it("expands only the leading composer skill", () => {
-    expect(translatePiSkillToken("$review inspect this")).toBe("/skill:review inspect this");
-    expect(translatePiSkillToken("literal $review")).toBe("literal $review");
+  it("moves a known composer skill mention to the front of the prompt", () => {
+    const skills: ReadonlySet<string> = new Set(["review"]);
+    expect(translatePiSkillToken("$review inspect this", skills)).toBe(
+      "/skill:review inspect this",
+    );
+    expect(translatePiSkillToken("please $review this", skills)).toBe("/skill:review please this");
+    expect(
+      translatePiSkillToken(
+        "Context handoff (x):\nsummary\n\nUser message:\n$review do it",
+        skills,
+      ),
+    ).toBe("/skill:review Context handoff (x):\nsummary\n\nUser message: do it");
+  });
+  it("leaves unknown names, currency, and plain text literal", () => {
+    const skills: ReadonlySet<string> = new Set(["review"]);
+    expect(translatePiSkillToken("$HOME is set", skills)).toBe("$HOME is set");
+    expect(translatePiSkillToken("costs $20", skills)).toBe("costs $20");
+    expect(translatePiSkillToken("literal $review", new Set())).toBe("literal $review");
+    expect(translatePiSkillToken("no mention here", skills)).toBe("no mention here");
   });
   it("finds raw SDK tool arguments without reading extension result shapes", () => {
     expect(
