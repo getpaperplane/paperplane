@@ -305,7 +305,9 @@ export function layerWithRegistry<Error>(
       const runtime = yield* RuntimePolicy.RuntimePolicyV2;
       const cwd =
         scenario.runtimePolicyOverride?.cwd ??
-        (yield* checkpointWorkspace(scenario.name).pipe(Effect.orDie));
+        (yield* checkpointWorkspace(scenario.name.replace(/[^a-z0-9_-]+/gi, "-")).pipe(
+          Effect.orDie,
+        ));
       return RuntimePolicy.RuntimePolicyV2.of({
         resolve: (input) =>
           runtime
