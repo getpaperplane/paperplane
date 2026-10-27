@@ -33,9 +33,10 @@ export function resolveAntigravityUserHome(
  * native precedence order: `config/skills` is shared with the Antigravity IDE
  * and CLI, and `antigravity-cli/skills` is where the `agy` CLI installs
  * skills. The agent resolves both under `GEMINI_HOME`, which Paperplane points at a
- * private profile, so the profile links these back to the user's `~/.gemini`.
- * `~/.agents/skills` is not read: the agent only treats `.agents/skills` as a
- * project directory.
+ * private profile. The profile rebuilds each root from the user's `~/.gemini`
+ * skills plus `~/.agents/skills`, so the agent loads `~/.agents/skills` only
+ * through the profile. The agent itself never reads `~/.agents/skills` directly,
+ * and the gemini skill wins a name collision.
  */
 export function antigravityUserSkillDirectories(
   path: Path.Path,
@@ -170,10 +171,12 @@ export const discoverAntigravitySkills = Effect.fn("discoverAntigravitySkills")(
     path,
     path.join(input.userHome, ".gemini"),
   );
+  // Mirrors the profile's merge: gemini roots first, then the shared folder.
   const roots = [
     { directory: configSkills, scope: "user" },
     { directory: path.resolve(input.cwd, ".gemini", "skills"), scope: "project" },
     { directory: cliSkills, scope: "user" },
+    { directory: path.join(input.userHome, ".agents", "skills"), scope: "user" },
     { directory: path.resolve(input.cwd, ".agents", "skills"), scope: "project" },
     { directory: path.resolve(input.cwd, ".agent", "skills"), scope: "project" },
   ];

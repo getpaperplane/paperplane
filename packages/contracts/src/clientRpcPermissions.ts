@@ -52,6 +52,9 @@ export const CLIENT_GUARDED_RPC_SCOPES = {
   [WS_METHODS.vcsCreateRef]: AuthSourceControlWriteScope,
   [WS_METHODS.vcsSwitchRef]: AuthSourceControlWriteScope,
   [WS_METHODS.vcsInit]: AuthSourceControlWriteScope,
+  // Writing the shared skills folder changes what every agent on this machine loads.
+  [WS_METHODS.agentSkillsInitRepository]: AuthSettingsWriteScope,
+  [WS_METHODS.agentSkillsSync]: AuthSettingsWriteScope,
 
   [WS_METHODS.scheduledTasksUpsert]: AuthOrchestrationOperateScope,
   [WS_METHODS.scheduledTasksSetEnabled]: AuthOrchestrationOperateScope,

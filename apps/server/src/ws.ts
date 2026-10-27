@@ -203,6 +203,7 @@ import { readWorkflowScript } from "./orchestration-v2/workflowScriptQuery.ts";
 import * as WorkspacePaths from "./workspace/WorkspacePaths.ts";
 import * as VcsStatusBroadcaster from "./vcs/VcsStatusBroadcaster.ts";
 import * as VcsProvisioningService from "./vcs/VcsProvisioningService.ts";
+import * as AgentSkills from "./agentSkills/AgentSkills.ts";
 import * as GitWorkflowService from "./git/GitWorkflowService.ts";
 import { refreshPushedPullRequests } from "./git/refreshPushedPullRequests.ts";
 import { linkCreatedPullRequest } from "./git/linkCreatedPullRequest.ts";
@@ -576,6 +577,9 @@ const CoreWsRpcGroup = ServerWsRpcGroup.omit(
   WS_METHODS.worktreeInventoryInspect,
   WS_METHODS.worktreeInventoryMeasure,
   WS_METHODS.worktreeInventoryRemove,
+  WS_METHODS.agentSkillsGetStatus,
+  WS_METHODS.agentSkillsInitRepository,
+  WS_METHODS.agentSkillsSync,
 );
 const layerPaperplaneWsRpc = Layer.unwrap(
   Effect.gen(function* () {
@@ -583,6 +587,7 @@ const layerPaperplaneWsRpc = Layer.unwrap(
     const sandboxes = yield* SandboxManager;
     const cuaDriver = yield* CuaDriver.CuaDriver;
     const inventory = yield* WorktreeInventory.WorktreeInventory;
+    const agentSkills = yield* AgentSkills.AgentSkills;
     return Layer.mergeAll(
       ServerWsRpcGroup.toLayerHandler(WS_METHODS.piGetCatalog, (input) =>
         providerRegistry.piCatalog(input),
@@ -620,6 +625,13 @@ const layerPaperplaneWsRpc = Layer.unwrap(
       ServerWsRpcGroup.toLayerHandler(WS_METHODS.worktreeInventoryRemove, (input) =>
         inventory.remove(input),
       ),
+      ServerWsRpcGroup.toLayerHandler(WS_METHODS.agentSkillsGetStatus, (input) =>
+        agentSkills.getStatus(input),
+      ),
+      ServerWsRpcGroup.toLayerHandler(WS_METHODS.agentSkillsInitRepository, (input) =>
+        agentSkills.initRepository(input),
+      ),
+      ServerWsRpcGroup.toLayerHandler(WS_METHODS.agentSkillsSync, () => agentSkills.sync()),
     );
   }),
 );

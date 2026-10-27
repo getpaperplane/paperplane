@@ -407,6 +407,12 @@ import {
   SourceControlRepositoryLookupInput,
 } from "./sourceControl.ts";
 import { VcsError } from "./vcs.ts";
+import {
+  AgentSkillsError,
+  AgentSkillsGetStatusInput,
+  AgentSkillsInitRepositoryInput,
+  AgentSkillsStatus,
+} from "./agentSkills.ts";
 import { Project, ProjectMutation, ProjectMutationError } from "./project.ts";
 
 export const WS_METHODS = {
@@ -486,6 +492,11 @@ export const WS_METHODS = {
   vcsCreateRef: "vcs.createRef",
   vcsSwitchRef: "vcs.switchRef",
   vcsInit: "vcs.init",
+
+  // Shared agent skills folder (~/.agents/skills)
+  agentSkillsGetStatus: "agentSkills.getStatus",
+  agentSkillsInitRepository: "agentSkills.initRepository",
+  agentSkillsSync: "agentSkills.sync",
 
   // Git workflow methods
   gitRunStackedAction: "git.runStackedAction",
@@ -1517,6 +1528,22 @@ const WsVcsInitRpc = Rpc.make(WS_METHODS.vcsInit, {
   error: Schema.Union([VcsError, EnvironmentAuthorizationError]),
 });
 
+const AgentSkillsRpcError = Schema.Union([AgentSkillsError, EnvironmentAuthorizationError]);
+const WsAgentSkillsGetStatusRpc = Rpc.make(WS_METHODS.agentSkillsGetStatus, {
+  payload: AgentSkillsGetStatusInput,
+  success: AgentSkillsStatus,
+  error: AgentSkillsRpcError,
+});
+const WsAgentSkillsInitRepositoryRpc = Rpc.make(WS_METHODS.agentSkillsInitRepository, {
+  payload: AgentSkillsInitRepositoryInput,
+  success: AgentSkillsStatus,
+  error: AgentSkillsRpcError,
+});
+const WsAgentSkillsSyncRpc = Rpc.make(WS_METHODS.agentSkillsSync, {
+  success: AgentSkillsStatus,
+  error: AgentSkillsRpcError,
+});
+
 /**
  * Ephemeral live diff preview for compact/mobile surfaces.
  * Not the persisted Paperplane Review model. Future review sessions should use
@@ -2218,6 +2245,9 @@ export const WsRpcGroup = RpcGroup.make(
   WsVcsCreateRefRpc,
   WsVcsSwitchRefRpc,
   WsVcsInitRpc,
+  WsAgentSkillsGetStatusRpc,
+  WsAgentSkillsInitRepositoryRpc,
+  WsAgentSkillsSyncRpc,
   WsReviewGetDiffPreviewRpc,
   WsReviewGetDiffFileContentsRpc,
   WsTerminalOpenRpc,

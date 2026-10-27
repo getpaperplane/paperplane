@@ -3,9 +3,21 @@ import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
+import * as HostProcess from "@getpaperplane/shared/HostProcess";
 
 import { discoverClaudeSkills, skillOverrideSettingsPaths } from "./ClaudeSkills.ts";
+
+// Discovery also reads the real `~/.agents/skills`, so each test runs against
+// an empty stand-in home unless it overrides HostProcess.HomeDirectory itself.
+const isolatedHomeLayer = Layer.effect(HostProcess.HomeDirectory)(
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    return yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-claude-home-" });
+  }),
+);
+const testLayer = Layer.provideMerge(isolatedHomeLayer, NodeServices.layer);
 
 const writeSkill = Effect.fn(function* (
   skillsDir: string,
@@ -19,7 +31,7 @@ const writeSkill = Effect.fn(function* (
   yield* fs.writeFileString(path.join(skillDir, "SKILL.md"), contents);
 });
 
-it.layer(NodeServices.layer)("discoverClaudeSkills", (it) => {
+it.layer(testLayer)("discoverClaudeSkills", (it) => {
   it.effect("discovers user and project skills with frontmatter metadata", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
@@ -719,6 +731,69 @@ it.layer(NodeServices.layer)("discoverClaudeSkills", (it) => {
           ["agent-only-no", false, true],
           ["plain-off", false, false],
           ["user-only-yes", true, false],
+        ],
+      );
+    }),
+  );
+
+  it.effect("loads the shared ~/.agents/skills root as a shared-scope skill", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const tempDir = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-claude-skills-" });
+      const home = path.join(tempDir, "home");
+      const configDir = path.join(home, ".claude");
+
+      yield* writeSkill(
+        path.join(home, ".agents", "skills"),
+        "shared-review",
+        ["---", "description: Shared review.", "---"].join("\n"),
+      );
+
+      const skills = yield* discoverClaudeSkills({ homePath: configDir }).pipe(
+        Effect.provideService(HostProcess.HomeDirectory, home),
+      );
+
+      assert.deepEqual(skills, [
+        {
+          name: "shared-review",
+          path: path.join(home, ".agents", "skills", "shared-review", "SKILL.md"),
+          enabled: true,
+          scope: "shared",
+          description: "Shared review.",
+        },
+      ]);
+    }),
+  );
+
+  it.effect("ranks user, then project, then shared on name collisions", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const tempDir = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-claude-skills-" });
+      const home = path.join(tempDir, "home");
+      const configDir = path.join(home, ".claude");
+      const workspace = path.join(tempDir, "workspace");
+      const skill = (description: string) =>
+        ["---", `description: ${description}`, "---"].join("\n");
+
+      // `review` exists in all three roots: only the user copy may be reported.
+      yield* writeSkill(path.join(configDir, "skills"), "review", skill("user copy"));
+      yield* writeSkill(path.join(workspace, ".claude", "skills"), "review", skill("project copy"));
+      yield* writeSkill(path.join(home, ".agents", "skills"), "review", skill("shared copy"));
+      // `lint` exists in the project and shared roots: project must win.
+      yield* writeSkill(path.join(workspace, ".claude", "skills"), "lint", skill("project lint"));
+      yield* writeSkill(path.join(home, ".agents", "skills"), "lint", skill("shared lint"));
+
+      const skills = yield* discoverClaudeSkills({ homePath: configDir }, workspace).pipe(
+        Effect.provideService(HostProcess.HomeDirectory, home),
+      );
+
+      assert.deepEqual(
+        skills.map((skill) => [skill.name, skill.scope, skill.description]),
+        [
+          ["lint", "project", "project lint"],
+          ["review", "user", "user copy"],
         ],
       );
     }),

@@ -29,7 +29,7 @@ const makeWorkspace = Effect.fn("makeWorkspace")(function* () {
 });
 
 it.layer(NodeServices.layer)("discoverAntigravitySkills", (it) => {
-  it.effect("does not read user skills from a nested project or from ~/.agents", () =>
+  it.effect("lists ~/.agents/skills as user skills after the gemini user roots", () =>
     Effect.gen(function* () {
       const path = yield* Path.Path;
       const input = yield* makeWorkspace();
@@ -39,31 +39,51 @@ it.layer(NodeServices.layer)("discoverAntigravitySkills", (it) => {
         "---\nname: review\ndescription: Review changes.\n---\n",
       );
       yield* writeSkill(
-        path.join(input.userHome, ".agents", "skills", "ignored"),
-        "---\nname: ignored\n---\n",
+        path.join(input.userHome, ".agents", "skills", "shared"),
+        "---\nname: shared\n---\n",
+      );
+      yield* writeSkill(
+        path.join(input.userHome, ".gemini", "config", "skills", "both"),
+        "---\nname: both\ndescription: Gemini copy.\n---\n",
+      );
+      yield* writeSkill(
+        path.join(input.userHome, ".agents", "skills", "both"),
+        "---\nname: both\ndescription: Shared copy.\n---\n",
       );
 
-      assert.deepEqual(yield* discoverAntigravitySkills(nested), [
-        {
-          name: "review",
-          description: "Review changes.",
-          path: skillPath,
-          scope: "user",
-          enabled: true,
-        },
-      ]);
-      // A project rooted at the home directory sees ~/.agents/skills as its own.
+      const skills = yield* discoverAntigravitySkills(nested);
       assert.deepEqual(
-        (yield* discoverAntigravitySkills({ ...input, cwd: input.userHome })).map((skill) => [
-          skill.name,
-          skill.scope,
-        ]),
+        skills.map((skill) => [skill.name, skill.scope]),
         [
-          ["ignored", "project"],
+          ["both", "user"],
           ["review", "user"],
+          ["shared", "user"],
         ],
       );
+      // The gemini copy wins a name collision with the shared folder.
+      assert.equal(skills[0]?.description, "Gemini copy.");
+      assert.equal(skills[1]?.path, skillPath);
     }),
+  );
+
+  it.effect(
+    "reports ~/.agents/skills once, as user scope, when the project is the home directory",
+    () =>
+      Effect.gen(function* () {
+        const path = yield* Path.Path;
+        const input = yield* makeWorkspace();
+        yield* writeSkill(
+          path.join(input.userHome, ".agents", "skills", "ignored"),
+          "---\nname: ignored\n---\n",
+        );
+        assert.deepEqual(
+          (yield* discoverAntigravitySkills({ ...input, cwd: input.userHome })).map((skill) => [
+            skill.name,
+            skill.scope,
+          ]),
+          [["ignored", "user"]],
+        );
+      }),
   );
 
   it.effect("reads skill names, descriptions and paths from the current native roots", () =>

@@ -21,6 +21,7 @@ import * as HostHealth from "../../../diagnostics/HostHealth.ts";
 import * as ThreadCommandExecutor from "../../../orchestration-v2/ThreadCommandExecutor.ts";
 import * as ThreadManagement from "../../../orchestration-v2/ThreadManagementService.ts";
 import * as Settings from "../../../serverSettings.ts";
+import * as AgentSkills from "../../../agentSkills/AgentSkills.ts";
 import * as McpHttpServer from "../../McpHttpServer.ts";
 import * as McpInvocationContext from "../../McpInvocationContext.ts";
 import * as McpToolAccess from "../../McpToolAccess.ts";
@@ -84,6 +85,7 @@ for (const available of [true, false, "interrupted"] as const) {
                 layerEnvironment,
                 ThreadCommandExecutor.layer,
                 Settings.layerTest(),
+                Layer.mock(AgentSkills.AgentSkills)({}),
                 Layer.succeed(McpInvocationContext.McpInvocationContext, caller),
                 Layer.mock(ThreadManagement.ThreadManagementService)({
                   getThreadShell: (id) => Effect.succeed(liveThreadShell(id)),
@@ -154,6 +156,7 @@ it.effect("updates preferences for a thread caller through the /mcp registration
         Layer.provide(layerEnvironment),
         Layer.provide(Layer.mock(HostHealth.HostHealth)({})),
         Layer.provide(Settings.layerTest()),
+        Layer.provide(Layer.mock(AgentSkills.AgentSkills)({})),
       ),
     ),
   ),
@@ -193,6 +196,7 @@ it.effect("refuses a preferences update when the caller's turn ends while it wai
           capabilities: { repositoryIdentity: false },
         }),
       }),
+      Layer.mock(AgentSkills.AgentSkills)({}),
       Layer.mock(Settings.ServerSettingsService)({
         getSettings: Effect.succeed(DEFAULT_SERVER_SETTINGS),
         updateSettings: () =>

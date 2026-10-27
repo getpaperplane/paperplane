@@ -10,6 +10,7 @@ import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
+import * as Option from "effect/Option";
 import * as Path from "effect/Path";
 import * as Result from "effect/Result";
 import * as Schema from "effect/Schema";
@@ -623,7 +624,7 @@ it.layer(NodeServices.layer)("Antigravity profile preparation", (it) => {
   );
 
   it.effect.skipIf(!symlinksSupported)(
-    "links the user's global skill directories into the profile without touching real content",
+    "merges the user's gemini skills into each profile root and ~/.agents/skills into the last",
     () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -631,30 +632,73 @@ it.layer(NodeServices.layer)("Antigravity profile preparation", (it) => {
         const temporaryDirectory = yield* fs.makeTempDirectoryScoped();
         const userHome = path.join(temporaryDirectory, "home");
         const profileDirectory = path.join(temporaryDirectory, "profile");
-        const configSkills = path.join(userHome, ".gemini", "config", "skills");
-        const cliSkills = path.join(userHome, ".gemini", "antigravity-cli", "skills");
-        yield* fs.makeDirectory(path.join(configSkills, "review"), { recursive: true });
+        const geminiConfig = path.join(userHome, ".gemini", "config", "skills");
+        const geminiCli = path.join(userHome, ".gemini", "antigravity-cli", "skills");
+        const shared = path.join(userHome, ".agents", "skills");
+        yield* fs.makeDirectory(path.join(geminiConfig, "review"), { recursive: true });
+        yield* fs.makeDirectory(path.join(geminiCli, "deploy"), { recursive: true });
+        yield* fs.makeDirectory(path.join(shared, "brainstorm"), { recursive: true });
+        // The user's gemini copy wins over the shared folder on a name collision.
+        yield* fs.makeDirectory(path.join(geminiConfig, "both"), { recursive: true });
+        yield* fs.makeDirectory(path.join(shared, "both"), { recursive: true });
 
         yield* prepareAntigravityProfile({ profileDirectory, userHome });
-        const configLink = path.join(profileDirectory, "config", "skills");
-        const cliLink = path.join(profileDirectory, "antigravity-cli", "skills");
-        expect(yield* fs.readLink(configLink)).toBe(configSkills);
-        expect(yield* fs.readLink(cliLink)).toBe(cliSkills);
-        expect(yield* fs.exists(path.join(configLink, "review"))).toBe(true);
-        // Only the skill directories are shared; the rest of the profile stays private.
+        const configRoot = path.join(profileDirectory, "config", "skills");
+        const cliRoot = path.join(profileDirectory, "antigravity-cli", "skills");
+        // Each root is a real directory of per-skill links, not a link to the user's directory.
+        expect((yield* fs.stat(configRoot)).type).toBe("Directory");
+        expect(yield* fs.readLink(configRoot).pipe(Effect.option)).toEqual(Option.none());
+        expect(yield* fs.readLink(path.join(configRoot, "review"))).toBe(
+          path.join(geminiConfig, "review"),
+        );
+        // Shared skills join only the lowest-precedence root, so each loads once and
+        // a gemini `config/skills` copy keeps its native precedence.
+        expect(yield* fs.exists(path.join(configRoot, "brainstorm"))).toBe(false);
+        expect(yield* fs.readLink(path.join(configRoot, "both"))).toBe(
+          path.join(geminiConfig, "both"),
+        );
+        yield* fs.makeDirectory(path.join(shared, ".git"), { recursive: true });
+        expect(yield* fs.readLink(path.join(cliRoot, "deploy"))).toBe(
+          path.join(geminiCli, "deploy"),
+        );
+        expect(yield* fs.readLink(path.join(cliRoot, "brainstorm"))).toBe(
+          path.join(shared, "brainstorm"),
+        );
+        // Only skills are shared; the rest of the profile stays private.
         expect(yield* fs.exists(path.join(profileDirectory, "config", "mcp_config.json"))).toBe(
           false,
         );
 
-        // A stale link is repointed; a real directory the user placed there is kept.
-        yield* fs.remove(cliLink);
-        yield* fs.symlink(path.join(temporaryDirectory, "elsewhere"), cliLink);
-        yield* fs.remove(configLink);
-        yield* fs.makeDirectory(path.join(configLink, "own-skill"), { recursive: true });
+        // Removing a shared skill drops its stale link; a real user entry at a name is kept.
+        yield* fs.remove(path.join(shared, "brainstorm"), { recursive: true });
+        yield* fs.makeDirectory(path.join(configRoot, "own-skill"), { recursive: true });
         yield* prepareAntigravityProfile({ profileDirectory, userHome });
-        expect(yield* fs.readLink(cliLink)).toBe(cliSkills);
-        expect(yield* fs.exists(path.join(configLink, "own-skill"))).toBe(true);
-        expect((yield* fs.stat(configLink)).type).toBe("Directory");
+        expect(yield* fs.exists(path.join(cliRoot, "brainstorm"))).toBe(false);
+        expect(yield* fs.exists(path.join(cliRoot, ".git"))).toBe(false);
+        expect(yield* fs.exists(path.join(configRoot, "own-skill"))).toBe(true);
+        expect(yield* fs.readLink(path.join(configRoot, "review"))).toBe(
+          path.join(geminiConfig, "review"),
+        );
+      }),
+  );
+
+  it.effect.skipIf(!symlinksSupported)(
+    "still links the gemini skills when ~/.agents/skills is missing",
+    () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const temporaryDirectory = yield* fs.makeTempDirectoryScoped();
+        const userHome = path.join(temporaryDirectory, "home");
+        const profileDirectory = path.join(temporaryDirectory, "profile");
+        const geminiConfig = path.join(userHome, ".gemini", "config", "skills");
+        yield* fs.makeDirectory(path.join(geminiConfig, "review"), { recursive: true });
+
+        yield* prepareAntigravityProfile({ profileDirectory, userHome });
+        expect(yield* fs.readLink(path.join(profileDirectory, "config", "skills", "review"))).toBe(
+          path.join(geminiConfig, "review"),
+        );
+        expect(yield* fs.exists(path.join(userHome, ".agents"))).toBe(false);
       }),
   );
 

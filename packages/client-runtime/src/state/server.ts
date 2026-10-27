@@ -993,9 +993,42 @@ export function createServerEnvironmentAtoms<R, E>(
     scheduler: configScheduler,
     concurrency: configConcurrency,
   });
+  // Shared `~/.agents/skills` status. Commands that change it re-read this
+  // query on success so the page shows the server's truth, not a local guess.
+  const agentSkillsStatus = createEnvironmentRpcQueryAtomFamily(runtime, {
+    label: "environment-data:server:agent-skills:status",
+    tag: WS_METHODS.agentSkillsGetStatus,
+  });
 
   return {
     configValueAtom,
+    agentSkillsStatus,
+    initAgentSkillsRepository: createEnvironmentRpcCommand(runtime, {
+      label: "environment-data:server:agent-skills:init-repository",
+      tag: WS_METHODS.agentSkillsInitRepository,
+      scheduler: configScheduler,
+      concurrency: configConcurrency,
+      onSuccess: ({ environmentId }, registry) =>
+        Effect.sync(() => registry.refresh(agentSkillsStatus({ environmentId, input: {} }))),
+    }),
+    syncAgentSkills: createEnvironmentRpcCommand(runtime, {
+      label: "environment-data:server:agent-skills:sync",
+      tag: WS_METHODS.agentSkillsSync,
+      scheduler: configScheduler,
+      concurrency: configConcurrency,
+      onSuccess: ({ environmentId }, registry) =>
+        Effect.sync(() => registry.refresh(agentSkillsStatus({ environmentId, input: {} }))),
+    }),
+    // A status read that probes the remote. It shares the status key's refresh
+    // so the card shows the probed ahead/behind counts, not a second cache entry.
+    checkAgentSkillsUpdates: createEnvironmentRpcCommand(runtime, {
+      label: "environment-data:server:agent-skills:check-updates",
+      tag: WS_METHODS.agentSkillsGetStatus,
+      scheduler: configScheduler,
+      concurrency: configConcurrency,
+      onSuccess: ({ environmentId }, registry) =>
+        Effect.sync(() => registry.refresh(agentSkillsStatus({ environmentId, input: {} }))),
+    }),
     runStorageCleanup: createEnvironmentRpcCommand(runtime, {
       label: "environment-data:server:run-storage-cleanup",
       tag: WS_METHODS.serverRunStorageCleanup,

@@ -255,12 +255,15 @@ function antigravityEnvironment(
 }
 
 /**
- * The agent reads its user-global skills under `GEMINI_HOME`, which Paperplane points
- * at the private profile. Link the two skill directories back to the user's
- * real `~/.gemini` so global skills load, while MCP servers, hooks, and
- * credentials stay isolated. Best effort: a link that cannot be made only
- * costs global skills, never the session. A real directory at the link path
- * is the user's own content and is left alone.
+ * The agent reads each user-global skill root under `GEMINI_HOME`, which Paperplane
+ * points at the private profile, and reads `~/.agents/skills` nowhere. So each
+ * profile root is a Paperplane-owned directory of per-skill symlinks, rebuilt on
+ * every launch: the user's `~/.gemini` skill wins a name collision, and
+ * `~/.agents/skills` fills the rest. Nothing is copied, and the user's `~/.gemini`
+ * is never written. MCP servers, hooks, and credentials stay isolated. Best
+ * effort: a root that cannot be built only costs global skills, never the session.
+ * A real directory at the root that Paperplane did not create is the user's own
+ * content and is left alone.
  */
 const linkAntigravityUserSkills = Effect.fn("linkAntigravityUserSkills")(function* (input: {
   readonly profileDirectory: string;
@@ -269,36 +272,88 @@ const linkAntigravityUserSkills = Effect.fn("linkAntigravityUserSkills")(functio
 }): Effect.fn.Return<void, never, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const links = antigravityUserSkillDirectories(path, input.profileDirectory);
-  const targets = antigravityUserSkillDirectories(path, path.join(input.userHome, ".gemini"));
-  for (const [link, target] of [
-    [links[0], targets[0]],
-    [links[1], targets[1]],
-  ] as const) {
-    yield* Effect.gen(function* () {
-      const existing = yield* fs.readLink(link).pipe(
-        Effect.map((value): string | undefined => path.resolve(path.dirname(link), value)),
-        Effect.catchReason("PlatformError", "NotFound", () => Effect.undefined),
-      );
-      if (existing === target) return;
-      if (existing !== undefined) {
-        yield* fs.remove(link);
-      }
-      yield* fs.makeDirectory(path.dirname(link), { recursive: true });
-      yield* Effect.tryPromise(() =>
-        NodeFSP.symlink(target, link, input.platform === "win32" ? "junction" : "dir"),
-      );
+  const roots = antigravityUserSkillDirectories(path, input.profileDirectory);
+  const geminiRoots = antigravityUserSkillDirectories(path, path.join(input.userHome, ".gemini"));
+  const sharedSkills = path.join(input.userHome, ".agents", "skills");
+  for (const [index, root] of roots.entries()) {
+    const geminiRoot = geminiRoots[index];
+    if (geminiRoot === undefined) continue;
+    yield* mergeSkillRoot({
+      root,
+      // Shared skills join only the lowest-precedence root (`antigravity-cli/skills`),
+      // so each loads once. Lower precedence first: the user's gemini skill wins.
+      sources: index === roots.length - 1 ? [sharedSkills, geminiRoot] : [geminiRoot],
+      platform: input.platform,
     }).pipe(
-      // A non-symlink at the link path fails `readLink`; anything else is a
-      // filesystem refusal. Both leave the profile usable.
       Effect.catch((error) =>
         Effect.logWarning("Antigravity user skills are not linked into the profile.", {
-          link,
-          target,
+          root,
           error,
         }),
       ),
     );
+  }
+});
+
+/**
+ * Rebuild `root` as a Paperplane-owned directory of symlinks, one per skill
+ * entry across `sources`. Only symlinks that Paperplane itself created (pointing
+ * into a source) are removed, so stale skills disappear and a user's real
+ * directory or file at a skill name is never touched.
+ */
+const mergeSkillRoot = Effect.fn("mergeSkillRoot")(function* (input: {
+  readonly root: string;
+  readonly sources: ReadonlyArray<string>;
+  readonly platform: NodeJS.Platform;
+}): Effect.fn.Return<void, PlatformError.PlatformError, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const isSource = (target: string) =>
+    input.sources.some((source) => target === source || target.startsWith(source + path.sep));
+
+  // A profile root that is a legacy whole-directory link to the user's dir is ours to replace.
+  const rootLink = yield* fs.readLink(input.root).pipe(Effect.orElseSucceed(() => undefined));
+  if (rootLink !== undefined) {
+    yield* fs.remove(input.root);
+  }
+  yield* fs.makeDirectory(input.root, { recursive: true });
+
+  // Desired skill name -> target path; later sources override earlier ones.
+  const desired = new Map<string, string>();
+  for (const source of input.sources) {
+    const entries = yield* fs.readDirectory(source).pipe(Effect.orElseSucceed((): string[] => []));
+    for (const entry of entries) {
+      // Dot entries (.git, .DS_Store, .system) are never skills.
+      if (entry.startsWith(".")) continue;
+      desired.set(entry, path.join(source, entry));
+    }
+  }
+
+  // Remove our stale links first.
+  for (const entry of yield* fs.readDirectory(input.root)) {
+    const linkPath = path.join(input.root, entry);
+    const target = yield* fs.readLink(linkPath).pipe(
+      Effect.map((value) => path.resolve(input.root, value)),
+      Effect.orElseSucceed(() => undefined),
+    );
+    if (target !== undefined && isSource(target) && desired.get(entry) !== target) {
+      yield* fs.remove(linkPath);
+    }
+  }
+
+  for (const [name, target] of desired) {
+    const linkPath = path.join(input.root, name);
+    const existing = yield* fs.readLink(linkPath).pipe(
+      Effect.map((value) => path.resolve(input.root, value)),
+      Effect.orElseSucceed(() => undefined),
+    );
+    if (existing === target) continue;
+    // A real file or directory the user placed here is kept, never overwritten.
+    if (existing === undefined && (yield* fs.exists(linkPath))) continue;
+    if (existing !== undefined) yield* fs.remove(linkPath);
+    yield* Effect.tryPromise(() =>
+      NodeFSP.symlink(target, linkPath, input.platform === "win32" ? "junction" : "dir"),
+    ).pipe(Effect.ignore);
   }
 });
 
