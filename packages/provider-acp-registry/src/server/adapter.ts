@@ -257,6 +257,7 @@ export const makeAcpRegistryAdapterV2 = Effect.fn("makeAcpRegistryAdapterV2")(fu
   };
   return yield* makeAcpAdapterV2({
     instanceId: options.instanceId,
+    environment: options.environment,
     flavor,
     selfInvocation: options.selfInvocation,
     // Per-agent exception (see the note above registerMistralVibeAcpExtensions):

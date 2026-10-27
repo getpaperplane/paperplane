@@ -39,6 +39,53 @@ import * as CursorAgentSdk from "./CursorAgentSdk.ts";
 const decodeCursorSettings = Schema.decodeEffect(CursorSettings);
 
 describe("CursorAdapterV2", () => {
+  it.effect("rejects prepared environments before opening the unsupported SDK", () =>
+    Effect.gen(function* () {
+      const instanceId = ProviderInstanceId.make("cursor-env");
+      let prepared = false;
+      const adapter = yield* makeCursorAdapterV2({
+        instanceId,
+        settings: yield* decodeCursorSettings({}),
+        environment: {},
+      }).pipe(
+        Effect.provideService(CursorAgentSdk.CursorAgentSdkRunner, {
+          assertComplete: Effect.void,
+          open: () => Effect.die("must not open the SDK"),
+        }),
+      );
+      const result = yield* adapter
+        .openSession({
+          threadId: ThreadId.make("cursor-env"),
+          providerSessionId: ProviderSessionId.make("cursor-env"),
+          modelSelection: { instanceId, model: "composer-2.5" },
+          runtimePolicy: { runtimeMode: "full-access", interactionMode: "default", cwd: null },
+          prepareEnvironment: () =>
+            Effect.sync(() => {
+              prepared = true;
+              return {};
+            }),
+        })
+        .pipe(Effect.result);
+      assert.equal(result._tag, "Failure");
+      if (result._tag === "Failure" && result.failure._tag === "ProviderAdapterOpenSessionError") {
+        assert.equal(result.failure._tag, "ProviderAdapterOpenSessionError");
+        assert.instanceOf(result.failure.cause, Error);
+        assert.include(String(result.failure.cause), "Cursor SDK");
+      }
+      assert.isFalse(prepared);
+    }).pipe(
+      Effect.scoped,
+      Effect.provide(
+        Layer.mergeAll(
+          IdAllocator.layer,
+          McpProviderSessions.layer,
+          TestProviderHost.layer().pipe(Layer.provide(NodeServices.layer)),
+          NodeServices.layer,
+        ),
+      ),
+    ),
+  );
+
   it.effect.each([
     { status: "finished", model: undefined, lateModel: undefined },
     { status: "cancelled", model: "claude-opus-4-6", lateModel: undefined },

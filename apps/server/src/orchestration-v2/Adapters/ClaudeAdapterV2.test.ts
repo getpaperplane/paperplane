@@ -1171,6 +1171,7 @@ describe("ClaudeAdapterV2 approval cancellation", () => {
 const captureSdkExecutablePaths = Effect.fn("captureSdkExecutablePaths")(function* (
   binaryPath: string,
   environment: ProviderInstanceEnvironment = [],
+  prepareEnvironment?: ProviderAdapter.ProviderAdapterV2OpenSessionInput["prepareEnvironment"],
 ) {
   const executablePaths: Array<string | undefined> = [];
   const taskToolEnvironment: Array<string | undefined> = [];
@@ -1216,6 +1217,7 @@ const captureSdkExecutablePaths = Effect.fn("captureSdkExecutablePaths")(functio
   const runtime = yield* adapter.openSession({
     threadId,
     providerSessionId: ProviderSessionId.make("provider-session-claude-binary-path"),
+    ...(prepareEnvironment ? { prepareEnvironment } : {}),
     modelSelection: CLAUDE_TEST_MODEL_SELECTION,
     runtimePolicy: CLAUDE_TEST_RUNTIME_POLICY,
   });
@@ -1238,6 +1240,26 @@ const captureSdkExecutablePaths = Effect.fn("captureSdkExecutablePaths")(functio
 });
 
 describe("ClaudeAdapterV2 executable path", () => {
+  it.effect("uses the prepared environment on the lazy SDK launch", () =>
+    Effect.gen(function* () {
+      const result = yield* captureSdkExecutablePaths(
+        "claude",
+        [{ name: "INSTANCE_ENV", value: "claude", sensitive: false }],
+        (environment) =>
+          Effect.sync(() => {
+            assert.equal(environment.INSTANCE_ENV, "claude");
+            return { ...environment, CLAUDE_CODE_ENABLE_TODO_TOOLS: "prepared" };
+          }),
+      );
+      assert.deepEqual(result.taskToolEnvironment, ["prepared"]);
+    }).pipe(
+      Effect.scoped,
+      Effect.provide(
+        Layer.mergeAll(IdAllocator.layer, McpProviderSessions.layer, NodeServices.layer),
+      ),
+    ),
+  );
+
   it.effect.each([
     { source: "the default", environment: [], hostEnvironment: {}, expected: undefined },
     {

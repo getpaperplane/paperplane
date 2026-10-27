@@ -106,6 +106,8 @@ import { turnScopedSelectionTransition } from "@getpaperplane/provider-core/serv
 import { OPENCODE_PROVIDER, openCodePermissionRequestKind } from "../adapter.ts";
 import { openCodeToolTurnItem } from "../toolItems.ts";
 
+const isOpenSessionError = Schema.is(ProviderAdapter.ProviderAdapterOpenSessionError);
+
 const OpenCode2ProviderCapabilities = {
   sessions: {
     // One server serves every location, so one session runtime owns them all.
@@ -4501,18 +4503,28 @@ export const make = Effect.fn("OpenCode2Adapter.make")(function* (instanceId: Pr
     // spawned server is not idle-stopped under a long tool call.
     openSession: (input) =>
       Effect.gen(function* () {
+        if (input.prepareEnvironment) {
+          return yield* new ProviderAdapter.ProviderAdapterOpenSessionError({
+            driver,
+            providerSessionId: input.providerSessionId,
+            cause: new Error(
+              "OpenCode 2 shares its server across sessions and cannot receive a session-specific environment.",
+            ),
+          });
+        }
         const scope = yield* Scope.make();
         yield* Effect.addFinalizer((exit) => Scope.close(scope, exit));
         const connection = yield* borrow.pipe(Effect.provideService(Scope.Scope, scope));
         return yield* openSession(input, { connection, scope });
       }).pipe(
-        Effect.mapError(
-          (cause) =>
-            new ProviderAdapter.ProviderAdapterOpenSessionError({
-              driver,
-              providerSessionId: input.providerSessionId,
-              cause,
-            }),
+        Effect.mapError((cause) =>
+          isOpenSessionError(cause)
+            ? cause
+            : new ProviderAdapter.ProviderAdapterOpenSessionError({
+                driver,
+                providerSessionId: input.providerSessionId,
+                cause,
+              }),
         ),
       ),
   });

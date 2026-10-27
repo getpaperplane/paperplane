@@ -12,6 +12,7 @@ import {
   ProviderSessionId,
   ThreadId,
   type ProviderThreadId,
+  type GitHubAccountSelection,
 } from "@getpaperplane/contracts";
 import * as Cause from "effect/Cause";
 import * as Clock from "effect/Clock";
@@ -41,6 +42,7 @@ import {
   withMetrics,
 } from "../observability/Metrics.ts";
 import { ProviderWorkspaceMissingError } from "../provider/Errors.ts";
+import * as AgentGitHubEnvironment from "../provider/AgentGitHubEnvironment.ts";
 import * as ProjectService from "../project/ProjectService.ts";
 import * as McpProviderSessions from "@getpaperplane/provider-core/server/McpProviderSessions";
 import * as ServerSettings from "../serverSettings.ts";
@@ -206,6 +208,8 @@ export class ProviderSessionManagerV2 extends Context.Service<
 >()("@getpaperplane/server/orchestration-v2/ProviderSessionManager/ProviderSessionManagerV2") {}
 
 interface LiveSessionEntry {
+  readonly githubAccount: GitHubAccountSelection | null;
+  readonly openedByThreadId: ThreadId;
   readonly attachedThreadIds: ReadonlySet<ThreadId>;
   readonly loadedProviderThreadKeyByThread: ReadonlyMap<ThreadId, string>;
   /**
@@ -353,6 +357,8 @@ export const layerWithOptions = (
   | ProjectionStore.ProjectionStoreV2
   | ProviderEventIngestor.ProviderEventIngestorV2
   | ProviderAdapterRegistry.ProviderAdapterRegistryV2
+  | AgentGitHubEnvironment.AgentGitHubEnvironment
+  | ServerSettings.ServerSettingsService
 > =>
   Layer.effect(
     ProviderSessionManagerV2,
@@ -361,15 +367,8 @@ export const layerWithOptions = (
       const fileSystem = yield* FileSystem.FileSystem;
       const mcpSessionRegistry = yield* McpSessionRegistry.McpSessionRegistry;
       const mcpSessions = yield* McpProviderSessions.McpProviderSessions;
-      /**
-       * Optional so the many focused tests that assemble this layer by hand do
-       * not each need a settings stub; the production composition always
-       * provides it. When present, an unreadable settings file withholds
-       * browser access rather than granting it — an explicit "off" silently
-       * becoming "on" would violate the user's stated choice, whereas the
-       * reverse costs an agent one toolset and is visible immediately (#7083).
-       */
-      const serverSettings = yield* Effect.serviceOption(ServerSettings.ServerSettingsService);
+      const serverSettings = yield* ServerSettings.ServerSettingsService;
+      const githubEnvironment = yield* AgentGitHubEnvironment.AgentGitHubEnvironment;
       const projectService = yield* Effect.serviceOption(ProjectService.ProjectService);
       const eventSink = yield* EventSink.EventSinkV2;
       const commandOutput = yield* CommandOutputHub.CommandOutputHub;
@@ -379,9 +378,8 @@ export const layerWithOptions = (
       const agentScope = yield* AgentScope;
       const agentAccessSettings = Effect.fn("ProviderSessionManagerV2.agentAccessSettings")(
         function* (threadId: ThreadId) {
-          if (Option.isNone(serverSettings)) return { browser: true, device: false };
           return yield* Effect.gen(function* () {
-            const settings = yield* serverSettings.value.getSettings;
+            const settings = yield* serverSettings.getSettings;
             const thread = yield* projectionStore.getThread(threadId);
             const entries = Object.values(settings.projectSettingsOverrides);
             const browserOverridden = entries.some(
@@ -1895,6 +1893,18 @@ export const layerWithOptions = (
           return { events, close } satisfies ProviderAdapter.ProviderAdapterV2EventSubscription;
         });
 
+      /** A runtime holding project GitHub credentials serves only the thread that opened it. */
+      const credentialsBelongToOtherThread = (
+        providerSessionId: ProviderSessionId,
+        threadId: ThreadId,
+      ) =>
+        Ref.get(sessions).pipe(
+          Effect.map((current) => {
+            const entry = current.get(sessionKey(providerSessionId));
+            return entry?.githubAccount != null && entry.openedByThreadId !== threadId;
+          }),
+        );
+
       const decorateRuntime = (
         runtime: ProviderAdapter.ProviderAdapterV2SessionRuntime,
         eventSubscribers: Ref.Ref<
@@ -1922,14 +1932,28 @@ export const layerWithOptions = (
             subscribeEvents.pipe(Effect.map((subscription) => subscription.events)),
           ),
           ensureThread: (input) =>
-            observeActivity(
-              providerSessionId,
-              ensureThreadAttached({
-                providerSessionId,
-                threadId: input.threadId,
-                providerInstanceId: runtime.instanceId,
-              }),
-            ).pipe(
+            credentialsBelongToOtherThread(providerSessionId, input.threadId).pipe(
+              Effect.flatMap((foreign) =>
+                foreign
+                  ? Effect.fail(
+                      new ProviderAdapter.ProviderAdapterEnsureThreadError({
+                        driver: runtime.driver,
+                        threadId: input.threadId,
+                        cause: "GitHub credentials belong to another thread.",
+                      }),
+                    )
+                  : Effect.void,
+              ),
+              Effect.andThen(
+                observeActivity(
+                  providerSessionId,
+                  ensureThreadAttached({
+                    providerSessionId,
+                    threadId: input.threadId,
+                    providerInstanceId: runtime.instanceId,
+                  }),
+                ),
+              ),
               Effect.andThen(runtime.ensureThread(input)),
               Effect.tap((providerThread) =>
                 markProviderThreadLoaded({
@@ -1955,14 +1979,29 @@ export const layerWithOptions = (
                 : { modelSelection: input.modelSelection }),
               ...(input.runtimePolicy === undefined ? {} : { runtimePolicy: input.runtimePolicy }),
             });
-            return observeActivity(
-              providerSessionId,
-              ensureThreadAttached({
-                providerSessionId,
-                threadId,
-                providerInstanceId: runtime.instanceId,
-              }),
-            ).pipe(
+            return credentialsBelongToOtherThread(providerSessionId, threadId).pipe(
+              Effect.flatMap((foreign) =>
+                foreign
+                  ? Effect.fail(
+                      new ProviderAdapter.ProviderAdapterResumeThreadError({
+                        driver: runtime.driver,
+                        providerSessionId,
+                        providerThreadId: input.providerThread.id,
+                        cause: "GitHub credentials belong to another thread.",
+                      }),
+                    )
+                  : Effect.void,
+              ),
+              Effect.andThen(
+                observeActivity(
+                  providerSessionId,
+                  ensureThreadAttached({
+                    providerSessionId,
+                    threadId,
+                    providerInstanceId: runtime.instanceId,
+                  }),
+                ),
+              ),
               Effect.andThen(
                 holdThreadLoaded({
                   providerSessionId,
@@ -2288,8 +2327,56 @@ export const layerWithOptions = (
                   });
                 }
               }
+              const githubAccount = yield* Effect.gen(function* () {
+                const settings = yield* serverSettings.getSettings;
+                const thread = yield* projectionStore.getThread(input.threadId);
+                return (
+                  resolveProjectSettings(settings, thread.projectId).settings.githubAccount ?? null
+                );
+              }).pipe(
+                Effect.mapError(
+                  (cause) =>
+                    new ProviderSessionOpenError({
+                      instanceId: input.modelSelection.instanceId,
+                      providerSessionId: input.providerSessionId,
+                      cause,
+                    }),
+                ),
+              );
               const key = sessionKey(input.providerSessionId);
-              const existing = (yield* Ref.get(sessions)).get(key);
+              let existing = (yield* Ref.get(sessions)).get(key);
+              if (existing !== undefined) {
+                const accountChanged =
+                  existing.githubAccount?.host !== githubAccount?.host ||
+                  existing.githubAccount?.login !== githubAccount?.login;
+                const ownsSession =
+                  (existing.attachedThreadIds.size === 1 &&
+                    existing.attachedThreadIds.has(input.threadId)) ||
+                  (existing.attachedThreadIds.size === 0 &&
+                    existing.openedByThreadId === input.threadId);
+                // Never recycle a shared process for project credentials, even
+                // when the requesting thread is already attached to it.
+                if (
+                  (existing.githubAccount !== null &&
+                    existing.openedByThreadId !== input.threadId) ||
+                  ((accountChanged || githubAccount !== null) && !ownsSession)
+                ) {
+                  return yield* new ProviderSessionOpenError({
+                    instanceId: input.modelSelection.instanceId,
+                    providerSessionId: input.providerSessionId,
+                    cause: "GitHub account selection requires a session owned by this thread.",
+                  });
+                }
+                if (accountChanged) {
+                  yield* releaseEntry({
+                    providerSessionId: input.providerSessionId,
+                    reason: "manual_shutdown",
+                    detail: "The project's GitHub account selection changed.",
+                    holdsSessionOpenLock: true,
+                  });
+                  existing = undefined;
+                }
+              }
               if (existing !== undefined && !(yield* releaseIfAdapterChanged(existing))) {
                 const attached = existing.attachedThreadIds.has(input.threadId);
                 if (!attached && !existing.supportsMultipleProviderThreads) {
@@ -2347,6 +2434,21 @@ export const layerWithOptions = (
                   providerSessionId: input.providerSessionId,
                   modelSelection: input.modelSelection,
                   runtimePolicy: input.runtimePolicy,
+                  ...(githubAccount === null
+                    ? {}
+                    : {
+                        prepareEnvironment: (environment: NodeJS.ProcessEnv) =>
+                          githubEnvironment.prepare(githubAccount, environment).pipe(
+                            Effect.mapError(
+                              (cause) =>
+                                new ProviderAdapter.ProviderAdapterOpenSessionError({
+                                  driver: adapter.driver,
+                                  providerSessionId: input.providerSessionId,
+                                  cause,
+                                }),
+                            ),
+                          ),
+                      }),
                   ...(input.resumeFromSession === undefined
                     ? {}
                     : { resumeFromSession: input.resumeFromSession }),
@@ -2405,6 +2507,8 @@ export const layerWithOptions = (
               const exposedRuntime = decorateRuntime(runtime, eventSubscribers);
               const now = yield* Clock.currentTimeMillis;
               const entry: LiveSessionEntry = {
+                githubAccount,
+                openedByThreadId: input.threadId,
                 adapter,
                 attachedThreadIds: new Set([input.threadId]),
                 loadedProviderThreadKeyByThread: new Map(),
@@ -2555,6 +2659,12 @@ export const layerWithOptions = (
                     .filter((thread) => thread.providerSessionId === input.providerSessionId)
                     .map((thread) => [thread.id, thread] as const),
                 );
+                // The projection may already bind this thread to a replacement
+                // session (for example a private GitHub-credentialed one).
+                const loadedThread = currentEntry.idleThreadUnloads.get(
+                  input.threadId,
+                )?.providerThread;
+                if (loadedThread !== undefined) providerThreads.set(loadedThread.id, loadedThread);
                 detachedProviderThreads = [...providerThreads.values()];
                 const activeTurns = projection.value.providerTurns.filter(
                   (turn) => turn.status === "running" && providerThreads.has(turn.providerThreadId),

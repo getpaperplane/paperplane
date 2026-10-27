@@ -139,6 +139,7 @@ const PiProviderCapabilitiesV2 = {
 
 export interface PiAdapterV2Options {
   readonly instanceId: ProviderInstanceId;
+  readonly environment?: NodeJS.ProcessEnv;
   readonly defaultModel?: string | undefined;
   readonly defaultThinkingLevel?: string | null | undefined;
   readonly createSession: (
@@ -182,6 +183,9 @@ export const makePiAdapterV2 = Effect.fn("makePiAdapterV2")(function* (
     planSelectionTransition: () => Effect.succeed(turnScopedSelectionTransition()),
     openSession: Effect.fn("PiAdapterV2.openSession")(function* (input) {
       const scope = yield* Effect.scope;
+      const environment = input.prepareEnvironment
+        ? yield* input.prepareEnvironment(options.environment ?? process.env)
+        : undefined;
       if (input.runtimePolicy.runtimeMode !== "full-access")
         return yield* new ProviderAdapter.ProviderAdapterProtocolError({
           driver: PI_PROVIDER,
@@ -266,6 +270,7 @@ export const makePiAdapterV2 = Effect.fn("makePiAdapterV2")(function* (
               options.createSession(
                 {
                   threadId: input.threadId,
+                  ...(environment === undefined ? {} : { environment }),
                   interactive: true,
                   cwd: input.runtimePolicy.cwd ?? config.cwd,
                   model: selection.model.trim() || options.defaultModel || undefined,

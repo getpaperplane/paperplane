@@ -253,7 +253,12 @@ export const AntigravityDriver: ProviderDriver<
             installation: executable,
             profile,
             cwd: input.cwd,
-            baseEnv: withAgentDeviceEnvironment(processEnvironment, input),
+            baseEnv: withAgentDeviceEnvironment(
+              input.processEnvironment === undefined
+                ? processEnvironment
+                : { ...processEnvironment, ...input.processEnvironment },
+              input,
+            ),
             auth,
             runtimeTempDirectory,
           }),
@@ -426,6 +431,7 @@ export const AntigravityDriver: ProviderDriver<
       const defaultModel = currentCatalog.pipe(Effect.map((catalog) => catalog?.defaultChatModel));
       const orchestrationAdapter = yield* makeAntigravityAdapterV2({
         instanceId,
+        environment: processEnvironment,
         selfInvocation,
         makeRuntime,
         withProcess: authFlow.withProcess,

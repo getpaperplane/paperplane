@@ -62,6 +62,7 @@ const AntigravityProviderCapabilitiesV2 = {
 
 export interface AntigravityAdapterV2Options {
   readonly instanceId: ProviderInstanceId;
+  readonly environment?: NodeJS.ProcessEnv;
   readonly selfInvocation: SelfInvocation;
   /** Spawns the official agent with the instance's Google profile. */
   readonly makeRuntime: (
@@ -237,6 +238,7 @@ export const makeAntigravityAdapterV2 = Effect.fn("makeAntigravityAdapterV2")(fu
   };
   return yield* makeAcpAdapterV2({
     instanceId: options.instanceId,
+    ...(options.environment === undefined ? {} : { environment: options.environment }),
     flavor: makeAntigravityAcpAdapterFlavor({ ...options, ...services }),
     selfInvocation: options.selfInvocation,
     ...(options.nativeLogging === undefined ? {} : { nativeLogging: options.nativeLogging }),

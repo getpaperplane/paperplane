@@ -35,6 +35,8 @@ import * as ProviderHost from "@getpaperplane/provider-core/server/ProviderHost"
 import * as TestProviderHost from "@getpaperplane/provider-testing/TestProviderHost";
 import type * as ProviderEventLoggers from "@getpaperplane/provider-core/server/ProviderEventLoggers";
 import * as OpenCodeRuntime from "./OpenCodeRuntime.ts";
+import * as OpenCode2Adapter from "./v2/adapter.ts";
+import * as OpenCode2Server from "./v2/OpenCode2Server.ts";
 import * as IdAllocator from "@getpaperplane/provider-core/server/IdAllocator";
 import * as McpProviderSessions from "@getpaperplane/provider-core/server/McpProviderSessions";
 
@@ -57,6 +59,114 @@ const encodeUnknownJson = Schema.encodeUnknownSync(Schema.fromJsonString(Schema.
 const OPEN_CODE_TEST_SETTINGS = Schema.decodeSync(OpenCodeSettings)({
   serverUrl: "http://test.invalid",
 });
+
+it.effect.each([false, true])(
+  "handles prepared environments before connecting OpenCode 1, external=%s",
+  (external) =>
+    Effect.gen(function* () {
+      const instanceId = ProviderInstanceId.make("opencode-prepared");
+      const environments: Array<NodeJS.ProcessEnv | undefined> = [];
+      let preparations = 0;
+      const adapter = yield* makeOpenCodeAdapterV2({
+        instanceId,
+        settings: yield* Schema.decodeEffect(OpenCodeSettings)({
+          serverUrl: external ? "http://test.invalid" : "",
+        }),
+        environment: { INSTANCE_ENV: "opencode" },
+      }).pipe(
+        Effect.provideService(OpenCodeRuntime.OpenCodeRuntime, {
+          connectToOpenCodeServer: (input) =>
+            Effect.sync(() => {
+              environments.push(input.environment);
+            }).pipe(
+              Effect.andThen(
+                new OpenCodeRuntime.OpenCodeRuntimeError({
+                  operation: "test-connect",
+                  detail: "Stop before SDK startup",
+                }),
+              ),
+            ),
+          createOpenCodeSdkClient: () => {
+            throw new Error("must not create SDK");
+          },
+          startOpenCodeServerProcess: () => Effect.die("unused"),
+          runOpenCodeCommand: () => Effect.die("unused"),
+          loadOpenCodeInventory: () => Effect.die("unused"),
+          loadOpenCodeSkills: () => Effect.die("unused"),
+          loadInventoryFromCli: () => Effect.die("unused"),
+          loadSkillsFromCli: () => Effect.die("unused"),
+        }),
+      );
+      const result = yield* adapter
+        .openSession({
+          threadId: ThreadId.make("opencode-prepared"),
+          providerSessionId: ProviderSessionId.make("opencode-prepared"),
+          modelSelection: { instanceId, model: "test" },
+          runtimePolicy: { runtimeMode: "full-access", interactionMode: "default", cwd: null },
+          prepareEnvironment: (environment) =>
+            Effect.sync(() => {
+              preparations += 1;
+              assert.equal(environment.INSTANCE_ENV, "opencode");
+              return { ...environment, SESSION_ENV: "prepared" };
+            }),
+        })
+        .pipe(Effect.result);
+      assert.equal(result._tag, "Failure");
+      if (result._tag === "Failure" && result.failure._tag === "ProviderAdapterOpenSessionError") {
+        if (external) assert.include(String(result.failure.cause), "external OpenCode server");
+      }
+      assert.equal(preparations, external ? 0 : 1);
+      assert.deepEqual(
+        environments,
+        external ? [] : [{ INSTANCE_ENV: "opencode", SESSION_ENV: "prepared" }],
+      );
+    }).pipe(
+      Effect.scoped,
+      Effect.provide(
+        Layer.mergeAll(
+          IdAllocator.layer,
+          McpProviderSessions.layer,
+          TestProviderHost.layer().pipe(Layer.provide(NodeServices.layer)),
+          NodeServices.layer,
+        ),
+      ),
+    ),
+);
+
+it.effect("rejects prepared environments before borrowing an OpenCode 2 server", () =>
+  Effect.gen(function* () {
+    const instanceId = ProviderInstanceId.make("opencode2-prepared");
+    const adapter = yield* OpenCode2Adapter.make(instanceId).pipe(
+      Effect.provideService(OpenCode2Server.OpenCode2Server, {
+        withConnection: () => Effect.die("must not borrow shared server"),
+      }),
+    );
+    const result = yield* adapter
+      .openSession({
+        threadId: ThreadId.make("opencode2-prepared"),
+        providerSessionId: ProviderSessionId.make("opencode2-prepared"),
+        modelSelection: { instanceId, model: "test" },
+        runtimePolicy: { runtimeMode: "full-access", interactionMode: "default", cwd: null },
+        prepareEnvironment: () => Effect.die("must not prepare unsupported environment"),
+      })
+      .pipe(Effect.result);
+    assert.equal(result._tag, "Failure");
+    if (result._tag === "Failure" && result.failure._tag === "ProviderAdapterOpenSessionError") {
+      assert.instanceOf(result.failure.cause, Error);
+      assert.include(String(result.failure.cause), "shares its server");
+    }
+  }).pipe(
+    Effect.scoped,
+    Effect.provide(
+      Layer.mergeAll(
+        IdAllocator.layer,
+        McpProviderSessions.layer,
+        TestProviderHost.layer().pipe(Layer.provide(NodeServices.layer)),
+        NodeServices.layer,
+      ),
+    ),
+  ),
+);
 
 function promiseGate<A>() {
   let resolve!: (value: A) => void;

@@ -153,6 +153,8 @@ import {
 import * as IdAllocator from "@getpaperplane/provider-core/server/IdAllocator";
 import * as ProviderAdapter from "@getpaperplane/provider-core/server/ProviderAdapter";
 
+const isOpenSessionError = Schema.is(ProviderAdapter.ProviderAdapterOpenSessionError);
+
 const CODEX_PROVIDER = ProviderDriverKind.make("codex");
 export const CODEX_DRIVER_KIND = CODEX_PROVIDER;
 export const CODEX_DEFAULT_INSTANCE_ID = defaultInstanceIdForDriver(CODEX_DRIVER_KIND);
@@ -1746,13 +1748,17 @@ export const makeCodexAdapterV2 = Effect.fn("makeCodexAdapterV2")(function* (
                     }),
                 ),
               );
+        const baseEnvironment = resolvedRuntime?.environment ?? adapterOptions.environment;
+        const environment = input.prepareEnvironment
+          ? yield* input.prepareEnvironment(baseEnvironment)
+          : baseEnvironment;
         const client = yield* clientFactory.open({
           instanceId: adapterOptions.instanceId,
           threadId: input.threadId,
           providerSessionId: input.providerSessionId,
           runtimePolicy: input.runtimePolicy,
           settings: resolvedRuntime?.config ?? adapterOptions.settings,
-          environment: resolvedRuntime?.environment ?? adapterOptions.environment,
+          environment,
         });
         const additionalContextByThread = yield* Ref.make(
           new Map<
@@ -7560,13 +7566,14 @@ export const makeCodexAdapterV2 = Effect.fn("makeCodexAdapterV2")(function* (
         };
         return runtime;
       }).pipe(
-        Effect.mapError(
-          (cause) =>
-            new ProviderAdapter.ProviderAdapterOpenSessionError({
-              driver: CODEX_PROVIDER,
-              providerSessionId: input.providerSessionId,
-              cause,
-            }),
+        Effect.mapError((cause) =>
+          isOpenSessionError(cause)
+            ? cause
+            : new ProviderAdapter.ProviderAdapterOpenSessionError({
+                driver: CODEX_PROVIDER,
+                providerSessionId: input.providerSessionId,
+                cause,
+              }),
         ),
       ),
   });

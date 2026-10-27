@@ -92,6 +92,8 @@ export interface PiSessionLike {
   fork?(entryId: string | null): Promise<void>;
 }
 export interface PiCreateSessionInput {
+  /** Environment for Paperplane's shell tools, not arbitrary extension processes. */
+  readonly environment?: NodeJS.ProcessEnv;
   readonly threadId?: ThreadId;
   readonly interactive?: boolean;
   readonly cwd: string;

@@ -24,6 +24,8 @@ import * as Effect from "effect/Effect";
 
 import {
   createAgentSessionFromServices,
+  createBashToolDefinition,
+  createPowerShellToolDefinition,
   DefaultResourceLoader,
   getAgentDir,
   ModelRuntime,
@@ -31,6 +33,7 @@ import {
   SessionManager,
   SettingsManager,
   type AgentSession,
+  type BashSpawnContext as PiSdkBashSpawnContext,
   type AgentSessionRuntimeDiagnostic,
   type AgentSessionServices,
   type Extension,
@@ -964,13 +967,41 @@ export async function createPiSession(
 
   const paperplaneTools = await createPiPaperplaneTools(mcpProviderSession);
   const workloadOwner = input.threadId ?? sessionManager.getSessionId();
+  // SDK spawn hooks scope shell credentials without changing the shared worker's environment.
+  // Extensions that spawn processes directly remain responsible for their own environment.
+  const shellOptions =
+    input.environment === undefined
+      ? undefined
+      : {
+          spawnHook: (context: PiSdkBashSpawnContext) => ({
+            ...context,
+            env: { ...context.env, ...input.environment },
+          }),
+        };
+  const shellPath = settingsManager.getShellPath();
+  const commandPrefix = settingsManager.getShellCommandPrefix();
+  const shellTools =
+    shellOptions === undefined
+      ? []
+      : [
+          createBashToolDefinition(cwd, {
+            ...shellOptions,
+            ...(shellPath === undefined ? {} : { shellPath }),
+            ...(commandPrefix === undefined ? {} : { commandPrefix }),
+          }),
+          createPowerShellToolDefinition(cwd, shellOptions),
+        ].map(({ renderCall: _renderCall, renderResult: _renderResult, ...tool }) => ({
+          ...tool,
+          defaultActive: false,
+        }));
   const { session, modelFallbackMessage: sdkModelFallbackMessage } =
     await createAgentSessionFromServices({
       services,
       sessionManager,
       customTools: [
         ...paperplaneTools.tools,
-        ...(options.workloads?.tools(cwd, workloadOwner) ?? []),
+        ...shellTools,
+        ...(options.workloads?.tools(cwd, workloadOwner, input.environment) ?? []),
       ],
       ...(options.textGeneration ? { noTools: "all" as const } : {}),
       ...(resolved?.model !== undefined ? { model: resolved.model } : undefined),

@@ -117,6 +117,7 @@ export const PiDriver: ProviderDriver<PiSettings, PiDriverEnv> = {
         );
       const orchestrationAdapter = yield* makePiAdapterV2({
         instanceId,
+        environment: { ...processEnv, PI_CODING_AGENT_DIR: agentDir, ELECTRON_RUN_AS_NODE: "1" },
         defaultModel: effectiveConfig.model,
         defaultThinkingLevel: effectiveConfig.thinkingLevel,
         createSession: (input, mcp) =>
