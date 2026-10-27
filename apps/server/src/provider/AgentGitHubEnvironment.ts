@@ -1,9 +1,12 @@
 import type { GitHubAccountSelection } from "@getpaperplane/contracts";
 import * as HostProcess from "@getpaperplane/shared/HostProcess";
 import * as Context from "effect/Context";
+import * as Crypto from "effect/Crypto";
 import * as Effect from "effect/Effect";
+import * as Hex from "effect/encoding/Hex";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
+import * as Option from "effect/Option";
 import * as Path from "effect/Path";
 import * as Schema from "effect/Schema";
 import type * as Scope from "effect/Scope";
@@ -36,22 +39,131 @@ export class AgentGitHubEnvironment extends Context.Service<
   }
 >()("@getpaperplane/server/provider/AgentGitHubEnvironment") {}
 
+const decodeGitHubUser = Schema.decodeUnknownOption(
+  Schema.fromJsonString(
+    Schema.Struct({
+      login: Schema.String,
+      name: Schema.NullOr(Schema.String),
+      email: Schema.NullOr(Schema.String),
+    }),
+  ),
+);
+const decodeGitHubEmails = Schema.decodeUnknownOption(
+  Schema.fromJsonString(
+    Schema.Array(
+      Schema.Struct({ email: Schema.String, primary: Schema.Boolean, verified: Schema.Boolean }),
+    ),
+  ),
+);
+
+// Hosts become a Git config key and gh YAML keys, not shell commands.
+const validHost = /^[a-z0-9.-]+(?::\d+)?$/i;
+const hasExplicitIdentity = (environment: NodeJS.ProcessEnv) =>
+  Boolean(environment.GIT_AUTHOR_EMAIL?.trim() || environment.GIT_COMMITTER_EMAIL?.trim());
+
 const make = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const runner = yield* ProcessRunner.ProcessRunner;
   const platform = yield* HostProcess.Platform;
   const home = yield* HostProcess.HomeDirectory;
+  const crypto = yield* Crypto.Crypto;
+  const identities = new Map<string, NodeJS.ProcessEnv | null>();
+
+  /**
+   * Commit author and committer for the account `environment` signs in as, which must be
+   * `login` when one is named. Returns null when no email is readable or the token belongs to
+   * another login. A named account then makes git refuse to commit, so the agent reports it.
+   */
+  const commitIdentity = Effect.fn("AgentGitHubEnvironment.commitIdentity")(function* (
+    host: string,
+    login: string | null,
+    cacheKey: string,
+    environment: NodeJS.ProcessEnv,
+  ) {
+    const cached = identities.get(cacheKey);
+    if (cached) return cached;
+    // The default account remembers a missing email; a named account checks again each time.
+    if (cached === null && login === null) return null;
+    const api = (endpoint: string) =>
+      runner
+        .run({
+          command: "gh",
+          args: ["api", "--hostname", host, endpoint],
+          env: { ...environment, GH_DEBUG: "", GH_PROMPT_DISABLED: "1" },
+          timeout: "10 seconds",
+          maxOutputBytes: 64 * 1024,
+        })
+        .pipe(
+          Effect.map((result) => (result.code === 0 ? result.stdout : "")),
+          Effect.orElseSucceed(() => ""),
+        );
+    const user = decodeGitHubUser(yield* api("user"));
+    if (
+      user._tag === "None" ||
+      (login !== null && user.value.login.toLowerCase() !== login.toLowerCase())
+    ) {
+      return null;
+    }
+    // A private profile email is only listed with the token's `user` scope.
+    const email =
+      user.value.email?.trim() ||
+      Option.getOrUndefined(decodeGitHubEmails(yield* api("user/emails")))?.find(
+        (entry) => entry.primary && entry.verified,
+      )?.email;
+    if (!email) {
+      identities.set(cacheKey, null);
+      return null;
+    }
+    const name = user.value.name?.trim() || user.value.login;
+    const identity = {
+      GIT_AUTHOR_NAME: name,
+      GIT_AUTHOR_EMAIL: email,
+      GIT_COMMITTER_NAME: name,
+      GIT_COMMITTER_EMAIL: email,
+    };
+    identities.set(cacheKey, identity);
+    return identity;
+  });
+
+  /** The Default account is gh's active sign-in; without one, commits keep git config. */
+  const activeIdentity = Effect.fn("AgentGitHubEnvironment.activeIdentity")(function* (
+    environment: NodeJS.ProcessEnv,
+  ) {
+    const host = environment.GH_HOST?.trim().toLowerCase() || "github.com";
+    if (!validHost.test(host)) return null;
+    const token = yield* runner
+      .run({
+        command: "gh",
+        args: ["auth", "token", "--hostname", host],
+        env: { ...environment, GH_DEBUG: "", GH_PROMPT_DISABLED: "1" },
+        timeout: "10 seconds",
+        maxOutputBytes: 16 * 1024,
+      })
+      .pipe(
+        Effect.map((result) => (result.code === 0 ? result.stdout.trim() : "")),
+        Effect.orElseSucceed(() => ""),
+      );
+    if (!token) return null;
+    // Keyed by token, not login, so `gh auth switch` and GH_TOKEN take effect.
+    const digest = Hex.encode(
+      yield* crypto.digest("SHA-256", new TextEncoder().encode(token)).pipe(Effect.orDie),
+    );
+    return yield* commitIdentity(host, null, `${host}#${digest}`, environment);
+  });
 
   const prepare = Effect.fn("AgentGitHubEnvironment.prepare")(function* (
     selection: GitHubAccountSelection | null,
     environment: NodeJS.ProcessEnv,
   ) {
-    if (selection === null) return environment;
+    if (selection === null) {
+      if (hasExplicitIdentity(environment)) return environment;
+      return { ...environment, ...(yield* activeIdentity(environment)) };
+    }
     const host = selection.host.trim().toLowerCase();
     const { login } = selection;
     // These values become a Git config key and gh YAML keys, not shell commands.
-    if (!/^[a-z0-9.-]+(?::\d+)?$/i.test(host) || !/^[a-z0-9][a-z0-9._-]*$/i.test(login)) {
+    if (!validHost.test(host) || !/^[a-z0-9][a-z0-9._-]*$/i.test(login)) {
       return yield* new AgentGitHubEnvironmentError({ host, login, stage: "configuration" });
     }
     const tokenNames =
@@ -152,19 +264,34 @@ const make = Effect.gen(function* () {
     if (
       /^[ \t\r\n\v\f]*(?:\+?\d+|-0+)/.exec(rawCount)?.[0] !== rawCount ||
       !Number.isSafeInteger(Number(rawCount)) ||
-      Number(rawCount) > Number.MAX_SAFE_INTEGER - 2
+      Number(rawCount) > Number.MAX_SAFE_INTEGER - 5
     ) {
       return yield* new AgentGitHubEnvironmentError({ host, login, stage: "configuration" });
     }
     const count = Number(rawCount);
-    const key = `credential.https://${host}.helper`;
+    const helper = `credential.https://${host}.helper`;
+    const entries: Array<readonly [string, string]> = [
+      [helper, ""],
+      [helper, "!gh auth git-credential"],
+    ];
+    // Commits credit the selected account over git config; explicit GIT_* identities still win.
+    const identity = hasExplicitIdentity(configured)
+      ? {}
+      : yield* commitIdentity(host, login, `${host}/${login.toLowerCase()}`, configured);
+    if (identity === null) {
+      // Blank command-line identity outranks git config, so every commit fails loudly.
+      entries.push(["user.useConfigOnly", "true"], ["user.name", ""], ["user.email", ""]);
+    }
     return {
       ...configured,
-      [countKey]: String(count + 2),
-      [`GIT_CONFIG_KEY_${count}`]: key,
-      [`GIT_CONFIG_VALUE_${count}`]: "",
-      [`GIT_CONFIG_KEY_${count + 1}`]: key,
-      [`GIT_CONFIG_VALUE_${count + 1}`]: "!gh auth git-credential",
+      ...identity,
+      [countKey]: String(count + entries.length),
+      ...Object.fromEntries(
+        entries.flatMap(([key, value], index) => [
+          [`GIT_CONFIG_KEY_${count + index}`, key],
+          [`GIT_CONFIG_VALUE_${count + index}`, value],
+        ]),
+      ),
     };
   });
   return AgentGitHubEnvironment.of({ prepare });

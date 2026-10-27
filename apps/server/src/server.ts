@@ -78,6 +78,7 @@ import * as DesktopBrowserChannel from "./preview/DesktopBrowserChannel.ts";
 import * as ServerBrowserStream from "./preview/ServerBrowserStream.ts";
 import * as PreviewBrowser from "./preview/PreviewBrowser.ts";
 import * as ProcessRunner from "./processRunner.ts";
+import * as AgentGitHubEnvironment from "./provider/AgentGitHubEnvironment.ts";
 import * as GitManager from "./git/GitManager.ts";
 import * as EnvironmentTheme from "./environmentTheme.ts";
 import * as AgentSkills from "./agentSkills/AgentSkills.ts";
@@ -361,6 +362,8 @@ const layerPullRequestService = PullRequestService.layer.pipe(
 const layerGitManager = GitManager.layer.pipe(
   // Per-project git settings resolve the acting thread's project.
   Layer.provide(Layer.merge(ProjectionStoreV2.layer, ProjectStore.layer)),
+  // Commits made from the UI are authored as the project's GitHub account.
+  Layer.provide(AgentGitHubEnvironment.layer.pipe(Layer.provide(ProcessRunner.layer))),
   Layer.provideMerge(RuntimeLayer.layerProjectSetupScriptRunner),
   Layer.provideMerge(WorktreeSetupTracker.layer),
   Layer.provideMerge(GitVcsDriver.layer),

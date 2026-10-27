@@ -2434,21 +2434,18 @@ export const layerWithOptions = (
                   providerSessionId: input.providerSessionId,
                   modelSelection: input.modelSelection,
                   runtimePolicy: input.runtimePolicy,
-                  ...(githubAccount === null
-                    ? {}
-                    : {
-                        prepareEnvironment: (environment: NodeJS.ProcessEnv) =>
-                          githubEnvironment.prepare(githubAccount, environment).pipe(
-                            Effect.mapError(
-                              (cause) =>
-                                new ProviderAdapter.ProviderAdapterOpenSessionError({
-                                  driver: adapter.driver,
-                                  providerSessionId: input.providerSessionId,
-                                  cause,
-                                }),
-                            ),
-                          ),
-                      }),
+                  prepareEnvironment: (environment: NodeJS.ProcessEnv) =>
+                    githubEnvironment.prepare(githubAccount, environment).pipe(
+                      Effect.mapError(
+                        (cause) =>
+                          new ProviderAdapter.ProviderAdapterOpenSessionError({
+                            driver: adapter.driver,
+                            providerSessionId: input.providerSessionId,
+                            cause,
+                          }),
+                      ),
+                    ),
+                  ...(githubAccount === null ? { environmentOptional: true } : {}),
                   ...(input.resumeFromSession === undefined
                     ? {}
                     : { resumeFromSession: input.resumeFromSession }),

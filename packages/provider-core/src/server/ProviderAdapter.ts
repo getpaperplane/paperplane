@@ -403,6 +403,11 @@ export interface ProviderAdapterV2OpenSessionInput {
   readonly prepareEnvironment?: (
     environment: NodeJS.ProcessEnv,
   ) => Effect.Effect<NodeJS.ProcessEnv, ProviderAdapterOpenSessionError, Scope.Scope>;
+  /**
+   * The prepared environment only credits the server's default GitHub account, so an adapter
+   * that cannot give a session its own environment opens without it instead of refusing.
+   */
+  readonly environmentOptional?: boolean;
   /** Native thread to activate while an eager adapter opens its provider process. */
   readonly initialNativeThreadId?: string;
   /** Preserves provider item identity across eager activation of a persisted thread. */

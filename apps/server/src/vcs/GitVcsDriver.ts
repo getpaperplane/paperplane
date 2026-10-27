@@ -193,6 +193,8 @@ export interface GitCommitOptions {
   readonly progress?: GitCommitProgress;
   /** Stage the current working tree immediately before committing. */
   readonly stage?: { readonly filePaths?: readonly string[] };
+  /** Environment for the commit process, such as the acting GitHub account's identity. */
+  readonly env?: NodeJS.ProcessEnv;
 }
 
 export interface GitDeleteLocalBranchInput {

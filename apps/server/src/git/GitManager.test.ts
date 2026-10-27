@@ -71,6 +71,7 @@ import * as ProjectionStore from "../orchestration-v2/ProjectionStore.ts";
 import * as ProjectStore from "../orchestration-v2/ProjectStore.ts";
 import * as SqlitePersistence from "../persistence/Sqlite.ts";
 import * as ProjectSetupScriptRunner from "../project/ProjectSetupScriptRunner.ts";
+import * as AgentGitHubEnvironment from "../provider/AgentGitHubEnvironment.ts";
 import * as ProviderRegistry from "../provider/ProviderRegistry.ts";
 import * as ServerSettings from "../serverSettings.ts";
 import { SelectedGitHubAccount } from "@getpaperplane/source-control-github/server/GitHubCredentials";
@@ -732,6 +733,8 @@ function makeManager(input?: {
     readonly reached: Deferred.Deferred<void>;
     readonly release: Deferred.Deferred<void>;
   };
+  /** Stands in for the selected GitHub account's environment; defaults to no changes. */
+  gitHubEnvironment?: AgentGitHubEnvironment.AgentGitHubEnvironment["Service"];
   /** Seeds the V2 stores the per-project settings lookup reads. */
   seed?: Effect.Effect<
     void,
@@ -843,6 +846,12 @@ function makeManager(input?: {
       },
     ),
     layerServerSettings,
+    Layer.succeed(
+      AgentGitHubEnvironment.AgentGitHubEnvironment,
+      input?.gitHubEnvironment ?? {
+        prepare: (_selection, environment) => Effect.succeed(environment),
+      },
+    ),
   ).pipe(
     Layer.provideMerge(layerSourceControlRegistry),
     Layer.provideMerge(layerVcsDriver),
@@ -3759,6 +3768,67 @@ it.layer(layerGitManagerTest)("GitManager", (it) => {
           Effect.map((result) => result.stdout.trim()),
         ),
       ).toBe("Implement stacked git actions");
+    }),
+  );
+
+  it.effect("commits as the selected GitHub account, or not at all when it is unusable", () =>
+    Effect.gen(function* () {
+      const repoDir = yield* makeTempDir("paperplane-git-manager-");
+      yield* initRepo(repoDir);
+      const logins: string[] = [];
+      const commitAs = (
+        prepare: AgentGitHubEnvironment.AgentGitHubEnvironment["Service"]["prepare"],
+      ) =>
+        Effect.gen(function* () {
+          const { manager } = yield* makeManager({
+            serverSettings: { githubAccount: { host: "github.com", login: "work" } },
+            textGeneration: {
+              generateCommitMessage: () => Effect.succeed({ subject: "Account commit", body: "" }),
+            },
+            gitHubEnvironment: {
+              prepare: (selection, environment) => {
+                if (selection !== null) logins.push(selection.login);
+                return prepare(selection, environment);
+              },
+            },
+          });
+          return yield* runStackedAction(manager, { cwd: repoDir, action: "commit" });
+        });
+      const lastCommit = runGit(repoDir, ["log", "-1", "--format=%an <%ae> | %cn <%ce> | %s"]).pipe(
+        Effect.map((result) => result.stdout.trim()),
+      );
+
+      NodeFS.writeFileSync(NodePath.join(repoDir, "README.md"), "account\n");
+      const created = yield* commitAs((_selection, environment) =>
+        Effect.succeed({
+          ...environment,
+          GIT_AUTHOR_NAME: "Work Account",
+          GIT_AUTHOR_EMAIL: "work@example.test",
+          GIT_COMMITTER_NAME: "Work Account",
+          GIT_COMMITTER_EMAIL: "work@example.test",
+        }),
+      );
+      expect(created.commit.status).toBe("created");
+      expect(yield* lastCommit).toBe(
+        "Work Account <work@example.test> | Work Account <work@example.test> | Account commit",
+      );
+
+      NodeFS.writeFileSync(NodePath.join(repoDir, "README.md"), "unusable\n");
+      const before = yield* lastCommit;
+      const failed = yield* Effect.flip(
+        commitAs((selection) =>
+          Effect.fail(
+            new AgentGitHubEnvironment.AgentGitHubEnvironmentError({
+              host: selection!.host,
+              login: selection!.login,
+              stage: "credential",
+            }),
+          ),
+        ),
+      );
+      expect(failed.message).toContain("Could not prepare the agent's GitHub account work");
+      expect(yield* lastCommit).toBe(before);
+      expect(logins).toEqual(["work", "work"]);
     }),
   );
 

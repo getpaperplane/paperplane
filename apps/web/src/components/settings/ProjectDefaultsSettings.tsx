@@ -583,7 +583,7 @@ export function ProjectDefaultsSettings({ category }: { category: ProjectSetting
               mixed={mixedGithubAccount}
               id={searchableSetting("github-account").id}
               title="GitHub account"
-              description="Pull requests, pushes, pulls, and agent-run gh and git commands act as this account (HTTPS remotes)."
+              description="Pull requests, pushes, pulls, and agent-run gh and git commands act as this account (HTTPS remotes). Commits are authored as it."
               resetAction={
                 settings.githubAccount ? (
                   <SettingResetButton
