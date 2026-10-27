@@ -1,4 +1,4 @@
-import { PAPERPLANE_MCP_SERVER_NAME } from "./paperplaneMcp.ts";
+import { PAPERPLANE_MCP_SERVER_NAME, piPaperplaneToolName } from "./paperplaneMcp.ts";
 
 export type PaperplaneMcpToolLogo = "paperplane";
 
@@ -391,6 +391,14 @@ export const PAPERPLANE_MCP_TOOL_NAMES: ReadonlySet<string> = new Set(
   Object.keys(PAPERPLANE_MCP_TOOLS),
 );
 
+/** Pi shortens over-long tool names (`piPaperplaneToolName`); map those aliases back. */
+const PI_PAPERPLANE_TOOL_ALIASES: ReadonlyMap<string, string> = new Map(
+  [...PAPERPLANE_MCP_TOOL_NAMES].flatMap((name) => {
+    const alias = piPaperplaneToolName(name);
+    return alias === `mcp__${PAPERPLANE_MCP_SERVER_NAME}__${name}` ? [] : [[alias, name] as const];
+  }),
+);
+
 function normalizePaperplaneMcpToolLabel(value: string): string {
   return value.replace(/\s+(?:complete|completed)\s*$/i, "").trim();
 }
@@ -405,6 +413,8 @@ function normalizePaperplaneMcpToolLabel(value: string): string {
 function resolvePaperplaneMcpToolName(value: string): string | null {
   const label = normalizePaperplaneMcpToolLabel(value);
   if (Object.hasOwn(PAPERPLANE_MCP_TOOLS, label)) return label;
+  const piAlias = PI_PAPERPLANE_TOOL_ALIASES.get(label);
+  if (piAlias !== undefined) return piAlias;
   const mcpMatch = /^mcp__(?<server>.+?)__(?<tool>.+)$/i.exec(label);
   if (mcpMatch?.groups) {
     const { server, tool } = mcpMatch.groups;

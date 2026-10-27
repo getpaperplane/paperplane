@@ -7,7 +7,10 @@ import {
   type CallToolResult,
 } from "@modelcontextprotocol/sdk/types.js";
 
-import { PAPERPLANE_MCP_TOOL_PREFIX } from "@getpaperplane/shared/paperplaneMcp";
+import {
+  PAPERPLANE_MCP_TOOL_PREFIX,
+  piPaperplaneToolName,
+} from "@getpaperplane/shared/paperplaneMcp";
 import type { McpProviderSessionConfig } from "@getpaperplane/provider-core/server/mcpSession";
 
 /** Keep MCP failures as failed Pi tool executions, not successful text results. */
@@ -70,10 +73,16 @@ export async function createPiPaperplaneTools(config: McpProviderSessionConfig |
     do {
       const page = await client.listTools(cursor ? { cursor } : {}, { timeout: 10_000 });
       for (const tool of page.tools) {
+        const name = piPaperplaneToolName(tool.name);
+        const description = tool.description ?? tool.name;
         tools.push({
-          name: `${PAPERPLANE_MCP_TOOL_PREFIX}${tool.name}`,
+          name,
           label: tool.annotations?.title ?? tool.title ?? tool.name,
-          description: tool.description ?? tool.name,
+          // Shortened names lose the canonical id the agent's instructions mention.
+          description:
+            name === `${PAPERPLANE_MCP_TOOL_PREFIX}${tool.name}`
+              ? description
+              : `Paperplane tool \`${tool.name}\`. ${description}`,
           parameters: tool.inputSchema,
           execute: async (_id, params, signal) => {
             const result = await client.callTool(
