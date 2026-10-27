@@ -6,6 +6,7 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import { parse } from "yaml";
 
 import * as ProcessRunner from "../processRunner.ts";
@@ -56,6 +57,24 @@ const fixture = Effect.gen(function* () {
     },
   };
 });
+
+const selectedTokenRunner = Layer.succeed(ProcessRunner.ProcessRunner, {
+  run: () =>
+    Effect.succeed({
+      stdout: "project-token\n",
+      stderr: "",
+      code: ChildProcessSpawner.ExitCode(0),
+      timedOut: false,
+      stdoutTruncated: false,
+      stderrTruncated: false,
+      stdoutInvalidUtf8: false,
+      stderrInvalidUtf8: false,
+    }),
+});
+const nullAccountLayer = AgentGitHubEnvironment.layer.pipe(
+  Layer.provideMerge(selectedTokenRunner),
+  Layer.provideMerge(NodeServices.layer),
+);
 
 const hasCommands = ["gh", "git"].every(
   (command) => spawnSync(command, ["--version"]).status === 0,
@@ -108,6 +127,67 @@ describe("AgentGitHubEnvironment", () => {
           0o600,
         );
       }).pipe(Effect.scoped, Effect.provide(liveLayer)),
+  );
+
+  it.effect("repairs a null selected account without changing other account configuration", () =>
+    Effect.gen(function* () {
+      const { fs, path, directory, environment } = yield* fixture;
+      const nullAccountHosts = fixtureHosts.replace(
+        "    project-account:\n      oauth_token: project-token",
+        "    project-account: null",
+      );
+      yield* fs.writeFileString(path.join(directory, "hosts.yml"), nullAccountHosts);
+      const service = yield* AgentGitHubEnvironment.AgentGitHubEnvironment;
+      const configured = yield* service.prepare(selection, environment);
+      const hosts = parse(
+        yield* fs.readFileString(path.join(configured.GH_CONFIG_DIR!, "hosts.yml")),
+      );
+      assert.deepStrictEqual(hosts["github.com"], {
+        user: selection.login,
+        oauth_token: "project-token",
+        users: {
+          "machine-account": { oauth_token: "machine-token" },
+          "project-account": { oauth_token: "project-token" },
+          "another-project": { oauth_token: "another-token" },
+        },
+      });
+      assert.deepStrictEqual(hosts["other.example.test"], {
+        user: "other-account",
+        oauth_token: "other-host-token",
+      });
+      assert.deepStrictEqual(
+        parse(yield* fs.readFileString(path.join(configured.GH_CONFIG_DIR!, "config.yml"))),
+        { aliases: { who: "api user --jq .login" } },
+      );
+      assert.strictEqual(
+        yield* fs.readFileString(path.join(directory, "hosts.yml")),
+        nullAccountHosts,
+      );
+    }).pipe(Effect.scoped, Effect.provide(nullAccountLayer)),
+  );
+
+  it.effect("creates the users map when the host entry has a null users value", () =>
+    Effect.gen(function* () {
+      const { fs, path, directory, environment } = yield* fixture;
+      yield* fs.writeFileString(
+        path.join(directory, "hosts.yml"),
+        "github.com:\n  user: machine-account\n  oauth_token: machine-token\n  users: null\n",
+      );
+      const service = yield* AgentGitHubEnvironment.AgentGitHubEnvironment;
+      const configured = yield* service.prepare(selection, environment);
+      const hosts = parse(
+        yield* fs.readFileString(path.join(configured.GH_CONFIG_DIR!, "hosts.yml")),
+      );
+      assert.deepStrictEqual(hosts["github.com"], {
+        user: selection.login,
+        oauth_token: "project-token",
+        users: { "project-account": { oauth_token: "project-token" } },
+      });
+      assert.strictEqual(
+        yield* fs.readFileString(path.join(directory, "hosts.yml")),
+        "github.com:\n  user: machine-account\n  oauth_token: machine-token\n  users: null\n",
+      );
+    }).pipe(Effect.scoped, Effect.provide(nullAccountLayer)),
   );
 
   it.live.skipIf(!hasCommands)(
