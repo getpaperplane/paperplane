@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vite-plus/test";
 
+import { piPaperplaneToolName } from "./paperplaneMcp.ts";
 import {
   PAPERPLANE_MCP_TOOL_NAMES,
+  resolvePaperplaneMcpToolId,
   resolvePaperplaneMcpToolPresentation,
 } from "./paperplaneMcpToolPresentation.ts";
 
@@ -127,5 +129,31 @@ describe("resolvePaperplaneMcpToolPresentation", () => {
   it("keeps unknown MCP tools on the generic renderer path", () => {
     expect(resolvePaperplaneMcpToolPresentation("mcp__github__search_issues")).toBeNull();
     expect(resolvePaperplaneMcpToolPresentation("paperplane.not_a_real_tool")).toBeNull();
+  });
+});
+
+describe("piPaperplaneToolName", () => {
+  it("keeps every Pi tool name within pi-claude-code's limits and resolvable", () => {
+    const names = [...PAPERPLANE_MCP_TOOL_NAMES].map(piPaperplaneToolName);
+    for (const name of names) expect(name).toMatch(/^[A-Za-z0-9_-]{1,50}$/);
+    expect(new Set(names).size).toBe(names.length);
+    for (const tool of PAPERPLANE_MCP_TOOL_NAMES) {
+      expect(resolvePaperplaneMcpToolId(piPaperplaneToolName(tool))).toBe(tool);
+    }
+  });
+
+  it("leaves short names alone and shortens long ones", () => {
+    expect(piPaperplaneToolName("html_render")).toBe("mcp__paperplane__html_render");
+    expect(piPaperplaneToolName("paperplane_environment_preferences_update")).toBe(
+      "mcp__paperplane__environment_preferences_update",
+    );
+  });
+
+  it("falls back to a stable hashed 50-character name", () => {
+    const tool = "paperplane_an_extraordinarily_long_tool_name_for_hashing";
+    const name = piPaperplaneToolName(tool);
+    expect(name).toMatch(/^[A-Za-z0-9_-]{50}$/);
+    expect(piPaperplaneToolName(tool)).toBe(name);
+    expect(piPaperplaneToolName(`${tool}x`)).not.toBe(name);
   });
 });

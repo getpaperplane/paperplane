@@ -149,6 +149,22 @@ describe("Pi's built-in Paperplane tools", () => {
     }
   });
 
+  it("registers over-long tool names under a short alias but calls the real tool", async () => {
+    const canonical = "paperplane_environment_preferences_update";
+    const endpoint = mockEndpoint(canonical);
+    const bridge = await createPiPaperplaneTools(config);
+    try {
+      const tool = bridge.tools.find(
+        (candidate) => candidate.name === "mcp__paperplane__environment_preferences_update",
+      )!;
+      expect(tool.description).toContain(canonical);
+      await execute(tool, {});
+      expect(endpoint.calls).toEqual([{ name: canonical, arguments: {} }]);
+    } finally {
+      await bridge.dispose();
+    }
+  });
+
   it("rejects calls after credential revocation without bypassing authorization", async () => {
     const endpoint = mockEndpoint();
     const bridge = await createPiPaperplaneTools(config);
