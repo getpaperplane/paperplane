@@ -1,5 +1,5 @@
 {"type":"transcript_start","provider":"pi","protocol":"pi.sdk-session","version":"1","scenario":"thread_rollback","metadata":{"generatedBy":"deterministic-sdk-conversion","source":"Original Pi RPC scenario prompts and assistant/tool events; SDK session state and method lifecycle authored without a live model."}}
-{"type":"expect_outbound","label":"createSession","frame":{"method":"createSession","key":1,"input":{"threadId":"<any>","interactive":true,"cwd":"<any>","model":"openrouter/deepseek/deepseek-v4-flash"}}}
+{"type":"expect_outbound","label":"createSession","frame":{"method":"createSession","key":1,"input":{"threadId":"<any>","environment":"<any>","interactive":true,"cwd":"<any>","model":"openrouter/deepseek/deepseek-v4-flash"}}}
 {"type":"emit_inbound","frame":{"type":"state","key":1,"state":{"sessionId":"session-1","sessionFile":"/pi-sessions/session-1.jsonl","isStreaming":false,"autoCompactionEnabled":true,"thinkingLevel":"off","model":{"provider":"openrouter","id":"deepseek/deepseek-v4-flash","input":["text"]}},"branch":[]}}
 {"type":"expect_outbound","label":"prompt","frame":{"method":"prompt","key":1,"id":1,"args":["Respond with exactly: rollback fixture first turn complete",{"images":[]}]}}
 {"type":"emit_inbound","frame":{"type":"state","key":1,"state":{"isStreaming":true}}}
