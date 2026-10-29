@@ -1562,6 +1562,16 @@ export const OrchestrationV2TurnItem = Schema.Union([
   Schema.Struct({
     ...OrchestrationV2TurnItemBaseFields,
     type: Schema.Literal("command_execution"),
+    /** Absent on provider-owned commands. Never stores a process identifier. */
+    execution: Schema.optional(
+      Schema.Struct({
+        owner: Schema.Literal("paperplane"),
+        generation: Schema.String,
+        clientRequestId: TrimmedNonEmptyString,
+        cwd: Schema.String,
+        stopRequested: Schema.Boolean,
+      }),
+    ),
     input: Schema.String,
     output: Schema.optional(Schema.String),
     /** Set on the wire when output was withheld; fetch it with getTurnItem. */
@@ -2358,6 +2368,16 @@ export const OrchestrationV2TurnItemJson = Schema.Union([
   Schema.Struct({
     ...OrchestrationV2TurnItemJsonBaseFields,
     type: Schema.Literal("command_execution"),
+    /** Absent on provider-owned commands. Never stores a process identifier. */
+    execution: Schema.optional(
+      Schema.Struct({
+        owner: Schema.Literal("paperplane"),
+        generation: Schema.String,
+        clientRequestId: TrimmedNonEmptyString,
+        cwd: Schema.String,
+        stopRequested: Schema.Boolean,
+      }),
+    ),
     input: Schema.String,
     output: Schema.optional(Schema.String),
     /** Set on the wire when output was withheld; fetch it with getTurnItem. */
@@ -3221,6 +3241,33 @@ export type OrchestrationV2Command = typeof OrchestrationV2Command.Type;
  * send them.
  */
 const OrchestrationV2InternalCommand = Schema.Union([
+  Schema.Struct({
+    type: Schema.Literal("background-command.start"),
+    commandId: CommandId,
+    threadId: ThreadId,
+    providerInstanceId: ProviderInstanceId,
+    itemId: TurnItemId,
+    clientRequestId: TrimmedNonEmptyString,
+    generation: Schema.String,
+    command: TrimmedNonEmptyString,
+    title: Schema.optional(TrimmedNonEmptyString),
+  }),
+  Schema.Struct({
+    type: Schema.Literal("background-command.stop"),
+    commandId: CommandId,
+    threadId: ThreadId,
+    itemId: TurnItemId,
+  }),
+  Schema.Struct({
+    type: Schema.Literal("background-command.observed"),
+    commandId: CommandId,
+    threadId: ThreadId,
+    itemId: TurnItemId,
+    generation: Schema.String,
+    status: Schema.Literals(["running", "completed", "failed", "interrupted"]),
+    output: Schema.optional(Schema.String),
+    exitCode: Schema.optional(Schema.Int),
+  }),
   /**
    * Records what a pull request watch saw, and wakes the agent in the same transaction when
    * `wake` is set. Rejected once the watch started at `startedAt` has ended, and a wake is

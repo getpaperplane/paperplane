@@ -33,12 +33,14 @@ import * as ThreadSearch from "../../../orchestration-v2/ThreadSearch.ts";
 import * as PreviewManager from "../../../preview/Manager.ts";
 import * as SourceControlRepositoryService from "../../../sourceControl/SourceControlRepositoryService.ts";
 import * as GitVcsDriver from "../../../vcs/GitVcsDriver.ts";
+import * as BackgroundCommandService from "../../../orchestration-v2/BackgroundCommandService.ts";
 import * as McpHttpServer from "../../McpHttpServer.ts";
 import * as McpSessionRegistry from "../../McpSessionRegistry.ts";
 import * as PreviewAutomationBroker from "../../PreviewAutomationBroker.ts";
 import * as PreviewBrowser from "../../../preview/PreviewBrowser.ts";
 
 const layerStubServices = Layer.mergeAll(
+  Layer.mock(BackgroundCommandService.BackgroundCommandService)({}),
   Layer.mock(Orchestrator.OrchestratorV2)({}),
   Layer.mock(HostHealth.HostHealth)({}),
   Layer.mock(ProjectionStore.ProjectionStoreV2)({}),

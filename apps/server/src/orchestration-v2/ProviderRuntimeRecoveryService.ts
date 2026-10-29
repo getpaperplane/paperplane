@@ -163,9 +163,23 @@ const cancelledItem = (
   item: OrchestrationV2ThreadProjection["turnItems"][number],
   now: DateTime.Utc,
 ): OrchestrationV2ThreadProjection["turnItems"][number] =>
-  item.type === "secret_request" && item.secretStatus === "pending"
-    ? { ...item, status: "cancelled", secretStatus: "cancelled", completedAt: now, updatedAt: now }
-    : { ...item, status: "cancelled", completedAt: now, updatedAt: now };
+  item.type === "command_execution" && item.execution?.owner === "paperplane"
+    ? {
+        ...item,
+        status: "interrupted",
+        output: `${item.output ?? ""}\nServer process ownership was lost. The command was not relaunched; an orphan process may still need manual cleanup.`,
+        completedAt: now,
+        updatedAt: now,
+      }
+    : item.type === "secret_request" && item.secretStatus === "pending"
+      ? {
+          ...item,
+          status: "cancelled",
+          secretStatus: "cancelled",
+          completedAt: now,
+          updatedAt: now,
+        }
+      : { ...item, status: "cancelled", completedAt: now, updatedAt: now };
 
 /**
  * A provider thread's latest started run: the last turn that provider saw.
@@ -281,7 +295,11 @@ export const make = Effect.gen(function* () {
       const recordCancelledBackgroundItem = (
         item: OrchestrationV2ThreadProjection["turnItems"][number],
       ) => {
-        if (!isBackgroundCapableTurnItemType(item.type)) return;
+        if (
+          !isBackgroundCapableTurnItemType(item.type) ||
+          (item.type === "command_execution" && item.execution?.owner === "paperplane")
+        )
+          return;
         const work = cancelledTurnItemWork(item);
         if (work === undefined) return;
         recordCancelledBackgroundWork(

@@ -488,6 +488,9 @@ function commandThreadId(command: OrchestrationV2ServerCommand): ThreadId {
     case "prepared-run.fail":
     case "prepared-run.retry":
     case "subagent.stop":
+    case "background-command.start":
+    case "background-command.stop":
+    case "background-command.observed":
     case "run.interrupt":
     case "queued-message.promote-to-steer":
     case "queue.resume":
@@ -8364,7 +8367,7 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
     });
 
   const loadProjectionForCommand = <K extends ProjectionRecordField>(
-    command: OrchestrationV2Command,
+    command: OrchestrationV2ServerCommand,
     fields: ReadonlyArray<K>,
     filter?: ProjectionRecordFilter,
   ) =>
@@ -8794,6 +8797,7 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
         turnItems: input.projection.turnItems,
         runs: input.projection.runs,
       })) {
+        if (item.type === "command_execution" && item.execution?.owner === "paperplane") continue;
         // An item without a run counts as the stopped run's.
         const itemRunOrdinal = item.runId === null ? undefined : runOrdinals.get(item.runId);
         if (itemRunOrdinal !== undefined && itemRunOrdinal > input.throughRunOrdinal) continue;
@@ -9815,6 +9819,26 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
       }
 
       if (providerTurn === undefined) {
+        const ownedWork = projection.turnItems.some(
+          (item) =>
+            item.type === "command_execution" &&
+            item.execution?.owner === "paperplane" &&
+            (projection.runs.find((owner) => owner.id === item.runId)?.ordinal ?? Infinity) <=
+              run.ordinal,
+        );
+        if (ownedWork) {
+          yield* emitEvent({
+            type: "turn-item.updated",
+            threadId: command.threadId,
+            runId: run.id,
+            nodeId: rootNode.id,
+            providerInstanceId: run.providerInstanceId,
+            occurredAt: now,
+            payload: interruptRequestItem,
+          });
+          yield* stopRemainingWork();
+          return undefined;
+        }
         return yield* new OrchestratorDispatchError({
           commandId: command.commandId,
           commandType: command.type,
@@ -11115,6 +11139,177 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
       }),
     );
 
+  const dispatchBackgroundCommand = Effect.fn("orchestrationV2.backgroundCommand")(function* (
+    command: Extract<
+      OrchestrationV2InternalCommand,
+      {
+        type:
+          | "background-command.start"
+          | "background-command.stop"
+          | "background-command.observed";
+      }
+    >,
+    events: Ref.Ref<Array<OrchestrationV2DomainEvent>>,
+    effects: Ref.Ref<Array<PendingOrchestrationEffectV2>>,
+  ) {
+    const now = yield* DateTime.now;
+    const existing = yield* projectionStore
+      .getTurnItem({ threadId: command.threadId, itemId: command.itemId })
+      .pipe(mapDispatchError(command));
+    const emitItem = (item: OrchestrationV2TurnItem) =>
+      emit(
+        events,
+        command,
+      )({
+        type: "turn-item.updated",
+        threadId: command.threadId,
+        ...(item.runId === null ? {} : { runId: item.runId }),
+        occurredAt: now,
+        payload: item,
+      });
+    const enqueue = (request: OrchestrationEffectRequestV2) =>
+      Ref.update(effects, (current) => [
+        ...current,
+        {
+          id: `effect:${command.commandId}:${request.type}`,
+          commandId: command.commandId,
+          threadId: command.threadId,
+          request,
+        },
+      ]);
+    if (command.type === "background-command.start") {
+      const projection = yield* loadProjectionForCommand(command, ["runs", "turnItems"], {
+        turnItemTypes: ["run_interrupt_request"],
+      });
+      if (
+        existing !== null ||
+        projection.thread.deletedAt !== null ||
+        projection.thread.archivedAt !== null ||
+        projection.thread.providerInstanceId !== command.providerInstanceId
+      )
+        return yield* new OrchestratorDispatchError({
+          commandId: command.commandId,
+          commandType: command.type,
+          cause: "Background command cannot start in this thread.",
+        });
+      const run = projection.runs.findLast(
+        (run) =>
+          ["preparing", "starting", "running"].includes(run.status) &&
+          run.providerInstanceId === command.providerInstanceId,
+      );
+      if (
+        run === undefined ||
+        projection.turnItems.some(
+          (item) => item.runId === run.id && item.type === "run_interrupt_request",
+        )
+      )
+        return yield* new OrchestratorDispatchError({
+          commandId: command.commandId,
+          commandType: command.type,
+          cause: "The calling session has no active, unstopped originating run.",
+        });
+      const project = yield* projects
+        .get(projection.thread.projectId)
+        .pipe(mapDispatchError(command));
+      if (Option.isNone(project) || project.value.deletedAt !== null)
+        return yield* new OrchestratorDispatchError({
+          commandId: command.commandId,
+          commandType: command.type,
+          cause: "The project no longer exists.",
+        });
+      const cwd = projection.thread.worktreePath ?? project.value.workspaceRoot;
+      const item: OrchestrationV2TurnItem = {
+        type: "command_execution",
+        id: command.itemId,
+        threadId: command.threadId,
+        runId: run.id,
+        nodeId: null,
+        providerThreadId: null,
+        providerTurnId: null,
+        nativeItemRef: null,
+        parentItemId: null,
+        ordinal: yield* nextTurnItemOrdinal(projection),
+        status: "pending",
+        title: command.title ?? command.command,
+        input: command.command,
+        startedAt: now,
+        completedAt: null,
+        updatedAt: now,
+        execution: {
+          owner: "paperplane",
+          generation: command.generation,
+          clientRequestId: command.clientRequestId,
+          cwd,
+          stopRequested: false,
+        },
+      };
+      yield* emitItem(item);
+      yield* enqueue({ type: "background-command.launch", itemId: item.id });
+      return;
+    }
+    if (existing?.type !== "command_execution" || existing.execution?.owner !== "paperplane")
+      return yield* new OrchestratorDispatchError({
+        commandId: command.commandId,
+        commandType: command.type,
+        cause: "No owned background command in this thread.",
+      });
+    if (!["pending", "running", "waiting"].includes(existing.status)) return;
+    if (command.type === "background-command.stop") {
+      yield* emitItem({
+        ...existing,
+        execution: { ...existing.execution, stopRequested: true },
+        updatedAt: now,
+      });
+      yield* enqueue({ type: "background-command.terminate", itemId: existing.id });
+    } else if (existing.execution.generation === command.generation) {
+      if (command.status === "running" && existing.execution.stopRequested) return;
+      yield* emitItem({
+        ...existing,
+        status: command.status,
+        updatedAt: now,
+        completedAt: command.status === "running" ? null : now,
+        ...(command.output === undefined ? {} : { output: command.output.slice(-32768) }),
+        ...(command.exitCode === undefined ? {} : { exitCode: command.exitCode }),
+      });
+    }
+  });
+
+  const stopOwnedCommands = Effect.fn("orchestrationV2.stopOwnedCommands")(function* (
+    command: OrchestrationV2ServerCommand,
+    events: Ref.Ref<Array<OrchestrationV2DomainEvent>>,
+    effects: Ref.Ref<Array<PendingOrchestrationEffectV2>>,
+    throughRunId?: RunId,
+  ) {
+    const projection = yield* loadProjectionForCommand(command, ["runs", "turnItems"], {
+      turnItemTypes: ["command_execution"],
+      turnItemStatuses: ["pending", "running", "waiting"],
+    });
+    const through =
+      throughRunId === undefined
+        ? Infinity
+        : (projection.runs.find((run) => run.id === throughRunId)?.ordinal ?? -1);
+    for (const item of projection.turnItems) {
+      if (
+        item.type !== "command_execution" ||
+        item.execution?.owner !== "paperplane" ||
+        !["pending", "running", "waiting"].includes(item.status)
+      )
+        continue;
+      const ordinal = projection.runs.find((run) => run.id === item.runId)?.ordinal ?? Infinity;
+      if (ordinal > through) continue;
+      yield* dispatchBackgroundCommand(
+        {
+          type: "background-command.stop",
+          commandId: CommandId.make(`${command.commandId}:owned:${item.id}`),
+          threadId: commandThreadId(command),
+          itemId: item.id,
+        },
+        events,
+        effects,
+      );
+    }
+  });
+
   const dispatchOnce = Effect.fn("orchestrationV2.dispatch.once")(function* (
     command: OrchestrationV2ServerCommand,
   ): Effect.fn.Return<
@@ -11286,7 +11481,13 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
       case "subagent.stop":
         yield* dispatchSubagentStop(command, events, effects);
         break;
+      case "background-command.start":
+      case "background-command.stop":
+      case "background-command.observed":
+        yield* dispatchBackgroundCommand(command, events, effects);
+        break;
       case "run.interrupt":
+        yield* stopOwnedCommands(command, events, effects, command.runId);
         cancelUnsettledEffects = yield* dispatchRunInterrupt(command, events, effects);
         // Stop also stops every delegated task under the thread once it commits.
         if (command.holdQueue === true) {
@@ -11305,6 +11506,7 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
         }
         break;
       case "thread.stop":
+        yield* stopOwnedCommands(command, events, effects);
         cancelUnsettledEffects = yield* dispatchThreadStop(command, events, effects);
         break;
       case "queued-message.promote-to-steer":
@@ -11470,6 +11672,23 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
             }),
         ),
       );
+      if (command.type === "background-command.start") {
+        const item = storedEvents.find((stored) => stored.event.type === "turn-item.updated")?.event
+          .payload;
+        if (
+          item === undefined ||
+          !("type" in item) ||
+          item.type !== "command_execution" ||
+          item.input !== command.command ||
+          item.title !== (command.title ?? command.command)
+        ) {
+          return yield* new OrchestratorDispatchError({
+            commandId: command.commandId,
+            commandType: command.type,
+            cause: "clientRequestId was already used with different background command input.",
+          });
+        }
+      }
       if (command.type === "queue.resume") {
         yield* mapDispatchError(command)(startNextQueuedRun(command.threadId));
       }
@@ -11500,7 +11719,9 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
         planned.events.length > 0 ||
         command.type === "thread.background-work.settle" ||
         command.type === "thread.stop" ||
-        command.type === "subagent.stop"
+        command.type === "subagent.stop" ||
+        command.type === "background-command.stop" ||
+        command.type === "background-command.observed"
           ? Effect.succeed(planned)
           : Effect.fail(
               new OrchestratorDispatchError({

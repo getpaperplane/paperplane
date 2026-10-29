@@ -392,6 +392,15 @@ export function summarizePaperplaneToolCalls(
         quantity(selected.length, "pull request"),
       );
       break;
+    case "background-command-start":
+      label = phrase("Started", "start", quantity(selected.length, "background command"));
+      break;
+    case "background-command-status":
+      label = phrase("Checked", "check", quantity(selected.length, "background command"));
+      break;
+    case "background-command-stop":
+      label = phrase("Stopped", "stop", quantity(selected.length, "background command"));
+      break;
     case "list-prs":
       label = phrase(
         "Checked",

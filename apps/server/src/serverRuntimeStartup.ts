@@ -34,6 +34,7 @@ import * as EffectWorker from "./orchestration-v2/EffectWorker.ts";
 import * as LegacyV1ThreadImporter from "./orchestration-v2/legacy/LegacyV1ThreadImporter.ts";
 import * as Orchestrator from "./orchestration-v2/Orchestrator.ts";
 import * as ProviderRuntimeRecovery from "./orchestration-v2/ProviderRuntimeRecoveryService.ts";
+import * as BackgroundCommandService from "./orchestration-v2/BackgroundCommandService.ts";
 import * as ProviderSessionManager from "./orchestration-v2/ProviderSessionManager.ts";
 import * as ThreadLaunch from "./orchestration-v2/ThreadLaunchService.ts";
 import * as ThreadManagement from "./orchestration-v2/ThreadManagementService.ts";
@@ -423,6 +424,7 @@ const make = (options?: StartupOptions) =>
     const legacyV1ThreadImporter = yield* LegacyV1ThreadImporter.LegacyV1ThreadImporter;
     const providerRuntimeRecovery = yield* ProviderRuntimeRecovery.ProviderRuntimeRecoveryService;
     const orchestrator = yield* Orchestrator.OrchestratorV2;
+    const backgroundCommands = yield* BackgroundCommandService.BackgroundCommandService;
     const providerSessions = yield* ProviderSessionManager.ProviderSessionManagerV2;
     const agentAwarenessRelay = yield* AgentAwarenessRelay.AgentAwarenessRelay;
     const lifecycleEvents = yield* ServerLifecycleEvents.ServerLifecycleEvents;
@@ -452,6 +454,7 @@ const make = (options?: StartupOptions) =>
         yield* providerRuntimeRecovery.prepareForShutdown.pipe(
           Effect.ensuring(providerSessions.shutdown),
         );
+        yield* backgroundCommands.shutdown;
         const reconciliation = yield* providerRuntimeRecovery.reconcile("shutdown");
         yield* Effect.logInfo("V2 orchestration shutdown reconciliation completed", reconciliation);
       }).pipe(

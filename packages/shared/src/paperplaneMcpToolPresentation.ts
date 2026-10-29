@@ -8,6 +8,9 @@ export interface PaperplaneMcpToolPresentation {
 }
 
 export type PaperplaneMcpToolSummaryAction =
+  | "background-command-start"
+  | "background-command-status"
+  | "background-command-stop"
   | "capabilities"
   | "delegate"
   | "task-status"
@@ -86,6 +89,18 @@ function tool(
 
 // Cards, activity rows, summaries, and provider identity recovery share this inventory.
 const PAPERPLANE_MCP_TOOLS: Readonly<Record<string, PaperplaneMcpToolDefinition>> = {
+  start_background_command: tool(
+    ["Start", "Starting", "Started", "a background command"],
+    "background-command-start",
+  ),
+  background_command_status: tool(
+    ["Check", "Checking", "Checked", "a background command"],
+    "background-command-status",
+  ),
+  stop_background_command: tool(
+    ["Stop", "Stopping", "Stopped", "a background command"],
+    "background-command-stop",
+  ),
   link_pull_request: tool(
     ["Link", "Linking", "Linked", "a pull request"],
     "link-pr",
