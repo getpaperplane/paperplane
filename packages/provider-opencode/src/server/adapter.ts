@@ -955,7 +955,11 @@ export const makeOpenCodeAdapterV2 = Effect.fn("makeOpenCodeAdapterV2")(function
     planSelectionTransition: () => Effect.succeed(turnScopedSelectionTransition()),
     openSession: Effect.fn("OpenCodeAdapterV2.openSession")(
       function* (input: ProviderAdapter.ProviderAdapterV2OpenSessionInput) {
-        if (input.prepareEnvironment && options.settings.serverUrl.trim()) {
+        if (
+          input.prepareEnvironment &&
+          !input.environmentOptional &&
+          options.settings.serverUrl.trim()
+        ) {
           return yield* new ProviderAdapter.ProviderAdapterOpenSessionError({
             driver: OPENCODE_PROVIDER,
             providerSessionId: input.providerSessionId,

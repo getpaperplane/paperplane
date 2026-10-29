@@ -86,6 +86,7 @@ import {
   provideSelectedGitHubAccount,
 } from "@getpaperplane/source-control-github/server/GitHubCredentials";
 
+import * as AgentGitHubEnvironment from "../provider/AgentGitHubEnvironment.ts";
 import * as ProviderRegistry from "../provider/ProviderRegistry.ts";
 import { extractBranchNameFromRemoteRef } from "./remoteRefs.ts";
 import { detachStackFrame } from "./detachStackFrame.ts";
@@ -742,6 +743,7 @@ export const make = Effect.gen(function* () {
   const sourceControlProviders = yield* SourceControlProviderRegistry.SourceControlProviderRegistry;
   const textGeneration = yield* TextGeneration.TextGeneration;
   const providerRegistry = yield* ProviderRegistry.ProviderRegistry;
+  const gitHubEnvironment = yield* AgentGitHubEnvironment.AgentGitHubEnvironment;
   const projectSetupScriptRunner = yield* ProjectSetupScriptRunner.ProjectSetupScriptRunner;
   const crypto = yield* Crypto.Crypto;
   const fileSystem = yield* FileSystem.FileSystem;
@@ -2263,11 +2265,29 @@ export const make = Effect.gen(function* () {
             },
           }
         : null;
-    const { commitSha } = yield* gitCore.commit(cwd, suggestion.subject, suggestion.body, {
-      timeoutMs: COMMIT_TIMEOUT_MS,
-      stage: filePaths ? { filePaths } : {},
-      ...(commitProgress ? { progress: commitProgress } : {}),
-    });
+    // Paperplane: commits credit the project's GitHub account, as agent commits do.
+    const selection = yield* SelectedGitHubAccount;
+    const { commitSha } = yield* Effect.scoped(
+      Effect.gen(function* () {
+        const env = yield* gitHubEnvironment.prepare(selection, process.env).pipe(
+          Effect.mapError(
+            (cause) =>
+              new GitManagerError({
+                operation: "runCommitStep",
+                cwd,
+                detail: cause.message,
+                cause,
+              }),
+          ),
+        );
+        return yield* gitCore.commit(cwd, suggestion.subject, suggestion.body, {
+          timeoutMs: COMMIT_TIMEOUT_MS,
+          stage: filePaths ? { filePaths } : {},
+          ...(commitProgress ? { progress: commitProgress } : {}),
+          env,
+        });
+      }),
+    );
     if (currentHookName !== null) {
       yield* emit({
         kind: "hook_finished",

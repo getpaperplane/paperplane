@@ -4503,7 +4503,7 @@ export const make = Effect.fn("OpenCode2Adapter.make")(function* (instanceId: Pr
     // spawned server is not idle-stopped under a long tool call.
     openSession: (input) =>
       Effect.gen(function* () {
-        if (input.prepareEnvironment) {
+        if (input.prepareEnvironment && !input.environmentOptional) {
           return yield* new ProviderAdapter.ProviderAdapterOpenSessionError({
             driver,
             providerSessionId: input.providerSessionId,

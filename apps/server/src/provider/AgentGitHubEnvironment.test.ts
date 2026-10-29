@@ -54,6 +54,9 @@ const fixture = Effect.gen(function* () {
       GITHUB_ENTERPRISE_TOKEN: "",
       GIT_CONFIG_COUNT: "0",
       GIT_TERMINAL_PROMPT: "0",
+      // An explicit identity skips the account lookup, keeping credential tests offline.
+      GIT_AUTHOR_EMAIL: "fixture@example.test",
+      GIT_COMMITTER_EMAIL: "fixture@example.test",
     },
   };
 });
@@ -79,15 +82,204 @@ const nullAccountLayer = AgentGitHubEnvironment.layer.pipe(
 const hasCommands = ["gh", "git"].every(
   (command) => spawnSync(command, ["--version"]).status === 0,
 );
+const hasGit = spawnSync("git", ["--version"]).status === 0;
+
+/** Fake gh: `auth token` succeeds, and `api <endpoint>` answers from `api`; records api calls. */
+const fakeGhLayer = (api: Record<string, string | undefined>, calls: string[] = []) =>
+  AgentGitHubEnvironment.layer.pipe(
+    Layer.provideMerge(
+      Layer.succeed(ProcessRunner.ProcessRunner, {
+        run: (input) => {
+          const endpoint = input.args[0] === "api" ? input.args.at(-1)! : undefined;
+          if (endpoint !== undefined) calls.push(endpoint);
+          const stdout = endpoint === undefined ? "project-token\n" : api[endpoint];
+          return Effect.succeed({
+            stdout: stdout ?? "",
+            stderr: "",
+            code: ChildProcessSpawner.ExitCode(stdout === undefined ? 1 : 0),
+            timedOut: false,
+            stdoutTruncated: false,
+            stderrTruncated: false,
+            stdoutInvalidUtf8: false,
+            stderrInvalidUtf8: false,
+          });
+        },
+      }),
+    ),
+    Layer.provideMerge(NodeServices.layer),
+  );
+
+/** Commits in a fresh repo whose global config names a different, machine-wide identity. */
+const commitWith = Effect.fn(function* (environment: NodeJS.ProcessEnv) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const repository = yield* fs.makeTempDirectoryScoped({ prefix: "paperplane-agent-commit-" });
+  const globalConfig = path.join(repository, "global.gitconfig");
+  yield* fs.writeFileString(
+    globalConfig,
+    "[user]\n\tname = Machine\n\temail = machine@example.test\n",
+  );
+  const env = {
+    ...environment,
+    GIT_CONFIG_GLOBAL: globalConfig,
+    GIT_CONFIG_NOSYSTEM: "1",
+    HOME: repository,
+  };
+  const git = (...args: string[]) =>
+    spawnSync("git", args, { cwd: repository, env, encoding: "utf8" });
+  git("init", "-q");
+  const commit = git("commit", "-q", "--allow-empty", "-m", "agent commit");
+  const log = git("log", "-1", "--format=%an <%ae> | %cn <%ce>");
+  return { code: commit.status, stderr: commit.stderr, author: log.stdout.trim() };
+});
+
+const accountEnvironment = {
+  PATH: process.env.PATH,
+  GH_TOKEN: "",
+  GITHUB_TOKEN: "",
+  GH_ENTERPRISE_TOKEN: "",
+  GITHUB_ENTERPRISE_TOKEN: "",
+  GIT_CONFIG_COUNT: "0",
+};
+const projectUser = (email: string | null, login = "project-account") =>
+  JSON.stringify({ login, name: "Project Person", email });
 
 describe("AgentGitHubEnvironment", () => {
-  it.effect("leaves the environment untouched when no project account is selected", () =>
-    Effect.gen(function* () {
+  it.live.skipIf(!hasGit)("commits as the active gh account when the project uses Default", () => {
+    const calls: string[] = [];
+    return Effect.gen(function* () {
       const service = yield* AgentGitHubEnvironment.AgentGitHubEnvironment;
-      const environment = { GH_CONFIG_DIR: "/not-read", GIT_CONFIG_COUNT: "invalid" };
+      const configured = yield* service.prepare(null, accountEnvironment);
+      const commit = yield* commitWith(configured);
+      assert.strictEqual(
+        commit.author,
+        "Project Person <project@example.test> | Project Person <project@example.test>",
+      );
+      // Default only sets the identity; gh and git keep the user's own sign-in.
+      assert.strictEqual(configured.GIT_CONFIG_COUNT, "0");
+      assert.isUndefined(configured.GH_CONFIG_DIR);
+      yield* service.prepare(null, accountEnvironment);
+      assert.deepStrictEqual(calls, ["user"]);
+    }).pipe(
+      Effect.scoped,
+      Effect.provide(fakeGhLayer({ user: projectUser("project@example.test") }, calls)),
+    );
+  });
+
+  it.live.skipIf(!hasGit)("keeps git config when the Default account's email is unreadable", () => {
+    const calls: string[] = [];
+    return Effect.gen(function* () {
+      const service = yield* AgentGitHubEnvironment.AgentGitHubEnvironment;
+      const commit = yield* commitWith(yield* service.prepare(null, accountEnvironment));
+      assert.strictEqual(commit.code, 0);
+      assert.strictEqual(
+        commit.author,
+        "Machine <machine@example.test> | Machine <machine@example.test>",
+      );
+      // Sessions in Default projects do not ask GitHub again.
+      yield* service.prepare(null, accountEnvironment);
+      assert.deepStrictEqual(calls, ["user", "user/emails"]);
+    }).pipe(Effect.scoped, Effect.provide(fakeGhLayer({ user: projectUser(null) }, calls)));
+  });
+
+  it.effect("leaves a Default environment with an explicit identity untouched", () => {
+    const calls: string[] = [];
+    return Effect.gen(function* () {
+      const service = yield* AgentGitHubEnvironment.AgentGitHubEnvironment;
+      const environment = { GIT_CONFIG_COUNT: "invalid", GIT_COMMITTER_EMAIL: "me@example.test" };
       assert.strictEqual(yield* service.prepare(null, environment), environment);
-    }).pipe(Effect.scoped, Effect.provide(liveLayer)),
+      assert.deepStrictEqual(calls, []);
+    }).pipe(
+      Effect.scoped,
+      Effect.provide(fakeGhLayer({ user: projectUser("project@example.test") }, calls)),
+    );
+  });
+
+  it.live.skipIf(!hasGit)("commits as the selected account instead of the machine identity", () => {
+    const calls: string[] = [];
+    return Effect.gen(function* () {
+      const { directory } = yield* fixture;
+      const service = yield* AgentGitHubEnvironment.AgentGitHubEnvironment;
+      const environment = { ...accountEnvironment, GH_CONFIG_DIR: directory };
+      const commit = yield* commitWith(yield* service.prepare(selection, environment));
+      assert.strictEqual(commit.code, 0);
+      assert.strictEqual(
+        commit.author,
+        "Project Person <project@example.test> | Project Person <project@example.test>",
+      );
+      // The profile is read once per account, not on every session.
+      yield* service.prepare(selection, environment);
+      assert.deepStrictEqual(calls, ["user"]);
+    }).pipe(
+      Effect.scoped,
+      Effect.provide(fakeGhLayer({ user: projectUser("project@example.test") }, calls)),
+    );
+  });
+
+  it.effect("uses the primary verified email when the profile email is private", () =>
+    Effect.gen(function* () {
+      const { directory } = yield* fixture;
+      const service = yield* AgentGitHubEnvironment.AgentGitHubEnvironment;
+      const configured = yield* service.prepare(selection, {
+        ...accountEnvironment,
+        GH_CONFIG_DIR: directory,
+      });
+      assert.strictEqual(configured.GIT_AUTHOR_EMAIL, "primary@example.test");
+      assert.strictEqual(configured.GIT_COMMITTER_EMAIL, "primary@example.test");
+    }).pipe(
+      Effect.scoped,
+      Effect.provide(
+        fakeGhLayer({
+          user: projectUser(null),
+          "user/emails": JSON.stringify([
+            { email: "old@example.test", primary: false, verified: true },
+            { email: "primary@example.test", primary: true, verified: true },
+          ]),
+        }),
+      ),
+    ),
   );
+
+  for (const [label, api] of [
+    ["the account's email is unreadable", { user: projectUser(null) }],
+    ["the token belongs to another login", { user: projectUser("other@example.test", "other") }],
+  ] as const) {
+    it.live.skipIf(!hasGit)(`refuses to commit under any identity when ${label}`, () =>
+      Effect.gen(function* () {
+        const { directory } = yield* fixture;
+        const service = yield* AgentGitHubEnvironment.AgentGitHubEnvironment;
+        const configured = yield* service.prepare(selection, {
+          ...accountEnvironment,
+          GH_CONFIG_DIR: directory,
+        });
+        assert.isUndefined(configured.GIT_AUTHOR_EMAIL);
+        // Neither the machine-wide identity in git config nor user@hostname may stand in.
+        const commit = yield* commitWith(configured);
+        assert.notStrictEqual(commit.code, 0);
+        assert.include(commit.stderr, "Author identity unknown");
+      }).pipe(Effect.scoped, Effect.provide(fakeGhLayer(api))),
+    );
+  }
+
+  it.effect("keeps an explicit git identity without reading the account", () => {
+    const calls: string[] = [];
+    return Effect.gen(function* () {
+      const { directory } = yield* fixture;
+      const service = yield* AgentGitHubEnvironment.AgentGitHubEnvironment;
+      const configured = yield* service.prepare(selection, {
+        ...accountEnvironment,
+        GH_CONFIG_DIR: directory,
+        GIT_AUTHOR_EMAIL: "chosen@example.test",
+      });
+      assert.strictEqual(configured.GIT_AUTHOR_EMAIL, "chosen@example.test");
+      assert.isUndefined(configured.GIT_COMMITTER_EMAIL);
+      assert.strictEqual(configured.GIT_CONFIG_COUNT, "2");
+      assert.deepStrictEqual(calls, []);
+    }).pipe(
+      Effect.scoped,
+      Effect.provide(fakeGhLayer({ user: projectUser("project@example.test") }, calls)),
+    );
+  });
 
   it.live.skipIf(!hasCommands)(
     "real gh and HTTPS git use the selected account, not the machine login",

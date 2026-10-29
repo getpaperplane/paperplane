@@ -39,7 +39,7 @@ import * as CursorAgentSdk from "./CursorAgentSdk.ts";
 const decodeCursorSettings = Schema.decodeEffect(CursorSettings);
 
 describe("CursorAdapterV2", () => {
-  it.effect("rejects prepared environments before opening the unsupported SDK", () =>
+  it.effect("rejects required prepared environments before opening the unsupported SDK", () =>
     Effect.gen(function* () {
       const instanceId = ProviderInstanceId.make("cursor-env");
       let prepared = false;
@@ -53,25 +53,30 @@ describe("CursorAdapterV2", () => {
           open: () => Effect.die("must not open the SDK"),
         }),
       );
-      const result = yield* adapter
-        .openSession({
-          threadId: ThreadId.make("cursor-env"),
-          providerSessionId: ProviderSessionId.make("cursor-env"),
-          modelSelection: { instanceId, model: "composer-2.5" },
-          runtimePolicy: { runtimeMode: "full-access", interactionMode: "default", cwd: null },
-          prepareEnvironment: () =>
-            Effect.sync(() => {
-              prepared = true;
-              return {};
-            }),
-        })
-        .pipe(Effect.result);
+      const open = (environmentOptional: boolean) =>
+        adapter
+          .openSession({
+            threadId: ThreadId.make("cursor-env"),
+            providerSessionId: ProviderSessionId.make("cursor-env"),
+            modelSelection: { instanceId, model: "composer-2.5" },
+            runtimePolicy: { runtimeMode: "full-access", interactionMode: "default", cwd: null },
+            prepareEnvironment: () =>
+              Effect.sync(() => {
+                prepared = true;
+                return {};
+              }),
+            environmentOptional,
+          })
+          .pipe(Effect.result);
+      const result = yield* open(false);
       assert.equal(result._tag, "Failure");
       if (result._tag === "Failure" && result.failure._tag === "ProviderAdapterOpenSessionError") {
         assert.equal(result.failure._tag, "ProviderAdapterOpenSessionError");
         assert.instanceOf(result.failure.cause, Error);
         assert.include(String(result.failure.cause), "Cursor SDK");
       }
+      // A Default project's identity is optional, so it must not keep Cursor from opening.
+      assert.equal((yield* open(true))._tag, "Success");
       assert.isFalse(prepared);
     }).pipe(
       Effect.scoped,

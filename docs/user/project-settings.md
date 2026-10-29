@@ -251,3 +251,12 @@ when the remote uses HTTPS; SSH remotes keep using your SSH keys. Agents working
 run `gh` and HTTPS `git` as the named account too, without changing your active `gh` login. A
 `GH_TOKEN` (or `GH_ENTERPRISE_TOKEN`) set where Paperplane runs still takes priority
 for `gh`. Changing the account restarts the agent session on its next turn.
+
+Commits made with **Commit & push** or by agents are authored with the GitHub name and email of the
+project's account, even when your git config names someone else. With **Default**, that is the
+active `gh` sign-in; if none is signed in, or GitHub won't share its email (a private email and a
+token without the `user` scope), those commits fall back to your git config. A named account's
+commits fail in that case until you make the email public or set `GIT_AUTHOR_EMAIL` and
+`GIT_COMMITTER_EMAIL` where Paperplane runs. In Default projects, Cursor agents and OpenCode
+agents on an external or shared server keep using git config. An explicit `GIT_AUTHOR_EMAIL` and
+`GIT_COMMITTER_EMAIL` always wins.

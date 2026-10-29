@@ -37,7 +37,6 @@ import { HttpServer } from "effect/http";
 
 import { ProviderWorkspaceMissingError } from "../provider/Errors.ts";
 import * as AgentGitHubEnvironment from "../provider/AgentGitHubEnvironment.ts";
-import * as ProcessRunner from "../processRunner.ts";
 import * as ServerEnvironment from "../environment/ServerEnvironment.ts";
 import * as ProjectService from "../project/ProjectService.ts";
 import * as McpProviderSession from "@getpaperplane/provider-core/server/mcpSession";
@@ -592,7 +591,9 @@ function layerTest(input: {
           layerTestStores,
           layerServerSettings,
           input.githubEnvironmentLayer ??
-            AgentGitHubEnvironment.layer.pipe(Layer.provide(ProcessRunner.layer)),
+            Layer.succeed(AgentGitHubEnvironment.AgentGitHubEnvironment, {
+              prepare: (_selection, environment) => Effect.succeed(environment),
+            }),
           ...(input.projectServiceLayer === undefined ? [] : [input.projectServiceLayer]),
         ),
       ),
@@ -5498,20 +5499,23 @@ it.effect(
           current = replacement;
           assert.strictEqual(Option.getOrThrow(yield* manager.get(sharedId)), other);
         }
+        // Default sessions are prepared too, so they credit the active gh account.
         assert.deepEqual(yield* Ref.get(prepared), [
+          null,
+          null,
           { host: "github.com", login: "alice" },
           { host: "github.com", login: "bob" },
           { host: "git.example.com", login: "bob" },
         ]);
-        assert.equal((yield* Ref.get(cleaned)).length, 2);
+        assert.equal((yield* Ref.get(cleaned)).length, 3);
         yield* manager.detach({ threadId, providerSessionId });
         assert.strictEqual(yield* open, current);
         yield* settings.updateSettings({ projectSettingsOverrides: { [projectId]: null } });
         const unconfigured = yield* open;
         assert.notStrictEqual(unconfigured, current);
         assert.strictEqual(yield* open, unconfigured);
-        assert.equal((yield* Ref.get(prepared)).length, 3);
-        assert.equal((yield* Ref.get(cleaned)).length, 3);
+        assert.equal((yield* Ref.get(prepared)).length, 6);
+        assert.equal((yield* Ref.get(cleaned)).length, 4);
         assert.equal((yield* Ref.get(state)).openCount, 6);
         assert.equal((yield* Ref.get(state)).closeCount, 4);
         assert.strictEqual(Option.getOrThrow(yield* manager.get(sharedId)), other);

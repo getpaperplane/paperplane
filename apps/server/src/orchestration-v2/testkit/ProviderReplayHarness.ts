@@ -22,7 +22,6 @@ import * as ServerConfig from "../../config.ts";
 import * as SqlitePersistence from "../../persistence/Sqlite.ts";
 import * as ServerSettings from "../../serverSettings.ts";
 import * as AgentGitHubEnvironment from "../../provider/AgentGitHubEnvironment.ts";
-import * as ProcessRunner from "../../processRunner.ts";
 import * as ThreadManagementService from "../ThreadManagementService.ts";
 import * as McpProviderSessions from "@getpaperplane/provider-core/server/McpProviderSessions";
 import * as McpSessionRegistryTestkit from "../../mcp/McpSessionRegistry.testkit.ts";
@@ -407,7 +406,11 @@ export function layerWithRegistry<Error>(
     Layer.provide(
       Layer.mergeAll(
         layerServerSettings,
-        AgentGitHubEnvironment.layer.pipe(Layer.provide(ProcessRunner.layer)),
+        // Replays never resolve the host's gh sign-in: the session environment passes
+        // through unchanged, so no gh process runs and no account credential is read.
+        Layer.succeed(AgentGitHubEnvironment.AgentGitHubEnvironment, {
+          prepare: (_selection, environment) => Effect.succeed(environment),
+        }),
         layerCommandOutputHubProvided,
         layerProvidedRegistry,
         layerEventSinkProvided,

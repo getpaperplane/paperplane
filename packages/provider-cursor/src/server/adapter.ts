@@ -874,7 +874,7 @@ export const makeCursorAdapterV2 = Effect.fn("makeCursorAdapterV2")(function* (
     planSelectionTransition: () => Effect.succeed(turnScopedSelectionTransition()),
     openSession: Effect.fn("CursorAdapterV2.openSession")(
       function* (input: ProviderAdapter.ProviderAdapterV2OpenSessionInput) {
-        if (input.prepareEnvironment) {
+        if (input.prepareEnvironment && !input.environmentOptional) {
           return yield* new ProviderAdapter.ProviderAdapterOpenSessionError({
             driver: CursorAgentSdk.CURSOR_PROVIDER,
             providerSessionId: input.providerSessionId,
