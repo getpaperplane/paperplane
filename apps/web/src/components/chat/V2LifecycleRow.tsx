@@ -1,3 +1,4 @@
+import { contextCompactionLabel } from "@getpaperplane/client-runtime/work-log/presentation";
 import { ThreadHoverCardPopup } from "../ThreadHoverCard";
 import { AgentElapsed } from "./AgentElapsed";
 import { projectedSubagentsToRuntime } from "@getpaperplane/client-runtime/state/subagentRuntime";
@@ -106,22 +107,15 @@ export function V2LifecycleRow(props: {
     );
   }
   if (item.type === "compaction") {
-    const tokenDetail =
-      item.beforeTokenCount === undefined && item.afterTokenCount === undefined
-        ? null
-        : `${item.beforeTokenCount ?? "?"} → ${item.afterTokenCount ?? "?"} tokens`;
-    const label =
-      item.status === "failed"
-        ? "Context compaction failed"
-        : item.status === "cancelled" || item.status === "interrupted"
-          ? "Context compaction stopped"
-          : item.status === "pending" || item.status === "running" || item.status === "waiting"
-            ? "Compacting context"
-            : "Context compacted";
     return (
-      <TimelineSystemDivider label={label} detail={item.summary ?? tokenDetail} icon={MinusIcon} />
+      <TimelineSystemDivider
+        label={contextCompactionLabel(item)}
+        detail={item.summary}
+        icon={MinusIcon}
+      />
     );
   }
+
   if (item.type === "handoff") {
     return (
       <HandoffRow

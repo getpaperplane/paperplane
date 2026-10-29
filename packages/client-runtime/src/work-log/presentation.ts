@@ -52,12 +52,26 @@ export function toolItemForDisplay(item: OrchestrationV2TurnItem): Orchestration
 export function contextCompactionLabel(
   item: Pick<
     Extract<OrchestrationV2TurnItem, { type: "compaction" }>,
-    "status" | "beforeTokenCount" | "afterTokenCount"
+    "status" | "beforeTokenCount" | "afterTokenCount" | "tokenCountsEstimated"
   >,
 ): string {
-  if (item.status === "running") return "Compacting context";
+  if (item.status === "pending" || item.status === "running" || item.status === "waiting") {
+    return "Compacting context";
+  }
+  if (item.status === "failed") return "Context compaction failed";
+  if (item.status === "interrupted" || item.status === "cancelled") {
+    return "Context compaction stopped";
+  }
+  if (item.status === "idle") return "Context compaction";
+  const estimatePrefix = item.tokenCountsEstimated ? "≈" : "";
   if (item.beforeTokenCount !== undefined && item.afterTokenCount !== undefined) {
-    return `Context compacted ${formatTokens(item.beforeTokenCount)} → ${formatTokens(item.afterTokenCount)} tokens`;
+    return `Context compacted ${estimatePrefix}${formatTokens(item.beforeTokenCount)} → ${estimatePrefix}${formatTokens(item.afterTokenCount)} tokens`;
+  }
+  if (item.beforeTokenCount !== undefined) {
+    return `Context compacted from ${estimatePrefix}${formatTokens(item.beforeTokenCount)} tokens`;
+  }
+  if (item.afterTokenCount !== undefined) {
+    return `Context compacted to ${estimatePrefix}${formatTokens(item.afterTokenCount)} tokens`;
   }
   return "Context compacted";
 }

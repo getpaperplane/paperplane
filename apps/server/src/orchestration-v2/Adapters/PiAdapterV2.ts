@@ -10,7 +10,11 @@ import type {
   OrchestrationV2RuntimeRequest,
   ProviderInstanceId,
 } from "@getpaperplane/contracts";
-import { OrchestrationV2UserInputQuestion, RuntimeRequestId } from "@getpaperplane/contracts";
+import {
+  NonNegativeInt,
+  OrchestrationV2UserInputQuestion,
+  RuntimeRequestId,
+} from "@getpaperplane/contracts";
 import * as ProviderAdapter from "@getpaperplane/provider-core/server/ProviderAdapter";
 import * as IdAllocator from "@getpaperplane/provider-core/server/IdAllocator";
 import * as McpProviderSessions from "@getpaperplane/provider-core/server/McpProviderSessions";
@@ -25,6 +29,7 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Queue from "effect/Queue";
 import * as Schema from "effect/Schema";
+import * as Option from "effect/Option";
 import * as Stream from "effect/Stream";
 import * as Scope from "effect/Scope";
 import * as Semaphore from "effect/Semaphore";
@@ -45,6 +50,7 @@ import { piBounded, piRecord, piTrimmed } from "../../provider/Layers/PiValues.t
 import * as PiExtensionStatuses from "../../provider/PiExtensionStatuses.ts";
 
 export const PI_PROVIDER = ProviderDriverKind.make("pi");
+const decodeCompactionTokenCount = Schema.decodeUnknownOption(NonNegativeInt);
 const PiProviderCapabilitiesV2 = {
   runtimePolicy: { enforcement: "native" },
   sessions: {
@@ -889,6 +895,17 @@ export const makePiAdapterV2 = Effect.fn("makePiAdapterV2")(function* (
           case "compaction_end": {
             const key = "compaction",
               complete = event.type === "compaction_end";
+            const result =
+              complete && event.aborted !== true && !event.errorMessage
+                ? piRecord(event.result)
+                : undefined;
+            const summary = piTrimmed(result?.summary);
+            const beforeTokenCount = Option.getOrUndefined(
+              decodeCompactionTokenCount(result?.tokensBefore),
+            );
+            const afterTokenCount = Option.getOrUndefined(
+              decodeCompactionTokenCount(result?.estimatedTokensAfter),
+            );
             yield* putItem(
               key,
               {
@@ -896,6 +913,12 @@ export const makePiAdapterV2 = Effect.fn("makePiAdapterV2")(function* (
                 type: "compaction",
                 driver: PI_PROVIDER,
                 title: complete ? "Context compacted" : "Compacting context...",
+                ...(summary === undefined ? {} : { summary: piBounded(summary, 1024) }),
+                ...(beforeTokenCount === undefined ? {} : { beforeTokenCount }),
+                ...(afterTokenCount === undefined ? {} : { afterTokenCount }),
+                ...(beforeTokenCount === undefined && afterTokenCount === undefined
+                  ? {}
+                  : { tokenCountsEstimated: true }),
                 ...(complete && event.aborted === true
                   ? { title: "Compaction stopped" }
                   : complete && event.errorMessage

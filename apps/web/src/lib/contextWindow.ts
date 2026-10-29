@@ -153,6 +153,7 @@ export function deriveLatestContextWindowSnapshot(
       continue;
     }
     const payload = entry.item;
+    if (payload.tokenCountsEstimated) return null;
     const usedTokens = asFiniteNumber(payload.afterTokenCount);
     if (usedTokens === null || usedTokens < 0) {
       continue;

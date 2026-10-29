@@ -44,6 +44,7 @@ import { canForkProjectedAssistantItem } from "@getpaperplane/client-runtime/sta
 import { notificationChildThreadId } from "@getpaperplane/client-runtime/state/thread-execution";
 import { replaceComposerContextReferences } from "@getpaperplane/shared/composerContextReferences";
 import {
+  contextCompactionLabel,
   liveThoughtLine,
   resolveWorkEntryToolPresentation,
   resolveViewedImageAsset,
@@ -3203,13 +3204,9 @@ function v2EventPresentation(item: OrchestrationV2TurnItem): {
         icon: GitForkIcon,
       };
     case "compaction": {
-      const tokenSummary =
-        item.beforeTokenCount === undefined && item.afterTokenCount === undefined
-          ? null
-          : `${item.beforeTokenCount ?? "?"} → ${item.afterTokenCount ?? "?"} tokens`;
       return {
-        label: "Context compacted",
-        detail: item.summary ?? tokenSummary,
+        label: contextCompactionLabel(item),
+        detail: item.summary ?? null,
         tone: item.status === "failed" ? "danger" : "muted",
         icon: MinusIcon,
       };

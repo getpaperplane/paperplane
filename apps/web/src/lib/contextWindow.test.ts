@@ -55,9 +55,10 @@ describe("V2 context window presentation", () => {
       }),
     ).toBeNull();
   });
-  it("uses retained compaction token data when available", () => {
-    const snapshot = deriveLatestContextWindowSnapshot([
-      {
+  it.each([false, true])(
+    "uses the newest compaction counts only when exact (estimated=%s)",
+    (tokenCountsEstimated) => {
+      const latest = {
         item: {
           id: "compaction-1" as never,
           threadId: "thread-1" as never,
@@ -68,21 +69,44 @@ describe("V2 context window presentation", () => {
           nativeItemRef: null,
           parentItemId: null,
           ordinal: 1,
-          status: "completed",
+          status: "completed" as const,
           title: null,
           startedAt: null,
           completedAt: null,
           updatedAt: DateTime.makeUnsafe("2026-06-20T00:00:00.000Z"),
-          type: "compaction",
+          type: "compaction" as const,
           driver: null,
+          tokenCountsEstimated,
           beforeTokenCount: 10_000,
           afterTokenCount: 2_000,
         },
-      },
-    ]);
-    expect(snapshot?.usedTokens).toBe(2_000);
-    expect(snapshot?.totalProcessedTokens).toBe(10_000);
-  });
+      };
+      const entries = [
+        {
+          item: {
+            ...latest.item,
+            ordinal: 0,
+            tokenCountsEstimated: false,
+            afterTokenCount: 5_000,
+          },
+        },
+        latest,
+      ];
+      const snapshot = deriveLatestContextWindowSnapshot(entries);
+      expect(
+        deriveLatestContextWindowSnapshot(entries, {
+          usedTokens: 42_000,
+          updatedAt: "2026-06-20T00:01:00.000Z",
+        })?.usedTokens,
+      ).toBe(42_000);
+      if (tokenCountsEstimated) {
+        expect(snapshot).toBeNull();
+        return;
+      }
+      expect(snapshot?.usedTokens).toBe(2_000);
+      expect(snapshot?.totalProcessedTokens).toBe(10_000);
+    },
+  );
 
   it("prefers current provider usage and preserves ACP cost", () => {
     const snapshot = deriveLatestContextWindowSnapshot([], undefined, {

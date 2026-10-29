@@ -5,6 +5,7 @@ import * as DateTime from "effect/DateTime";
 import { PAPERPLANE_MCP_TOOL_NAMES } from "@getpaperplane/shared/paperplaneMcpToolPresentation";
 
 import {
+  contextCompactionLabel,
   commandDetailRepeatsCommand,
   extractCommandOutputText,
   liveThoughtLine,
@@ -1084,4 +1085,58 @@ describe("liveThoughtLine", () => {
     );
     expect(liveThoughtLine("   ")).toBe("");
   });
+});
+
+describe("contextCompactionLabel", () => {
+  it.each([
+    [{ status: "idle", beforeTokenCount: 5_000, afterTokenCount: 2_000 }, "Context compaction"],
+    [{ status: "completed" }, "Context compacted"],
+    [{ status: "completed", beforeTokenCount: 5_000 }, "Context compacted from 5K tokens"],
+    [{ status: "completed", afterTokenCount: 2_000 }, "Context compacted to 2K tokens"],
+    [
+      { status: "completed", beforeTokenCount: 5_000, afterTokenCount: 2_000 },
+      "Context compacted 5K → 2K tokens",
+    ],
+    [
+      {
+        status: "completed",
+        beforeTokenCount: 5_000,
+        afterTokenCount: 2_000,
+        tokenCountsEstimated: true,
+      },
+      "Context compacted ≈5K → ≈2K tokens",
+    ],
+    [
+      { status: "completed", beforeTokenCount: 5_000, tokenCountsEstimated: true },
+      "Context compacted from ≈5K tokens",
+    ],
+    [
+      { status: "completed", afterTokenCount: 2_000, tokenCountsEstimated: true },
+      "Context compacted to ≈2K tokens",
+    ],
+    [
+      { status: "completed", beforeTokenCount: 0, afterTokenCount: 0 },
+      "Context compacted 0 → 0 tokens",
+    ],
+    [{ status: "pending", beforeTokenCount: 5_000, afterTokenCount: 2_000 }, "Compacting context"],
+    [{ status: "running", beforeTokenCount: 5_000, afterTokenCount: 2_000 }, "Compacting context"],
+    [{ status: "waiting", beforeTokenCount: 5_000, afterTokenCount: 2_000 }, "Compacting context"],
+    [
+      { status: "failed", beforeTokenCount: 5_000, afterTokenCount: 2_000 },
+      "Context compaction failed",
+    ],
+    [
+      { status: "interrupted", beforeTokenCount: 5_000, afterTokenCount: 2_000 },
+      "Context compaction stopped",
+    ],
+    [
+      { status: "cancelled", beforeTokenCount: 5_000, afterTokenCount: 2_000 },
+      "Context compaction stopped",
+    ],
+  ] satisfies ReadonlyArray<readonly [Parameters<typeof contextCompactionLabel>[0], string]>)(
+    "formats %j as %s",
+    (item, expected) => {
+      expect(contextCompactionLabel(item)).toBe(expected);
+    },
+  );
 });
