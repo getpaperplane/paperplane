@@ -210,6 +210,12 @@ export const planThreadDeletion = Effect.fn("ThreadDeletion.planThreadDeletion")
     });
   }
   effects.push({
+    id: `effect:${command.commandId}:background-command.terminate`,
+    commandId: command.commandId,
+    threadId: command.threadId,
+    request: { type: "background-command.terminate" },
+  });
+  effects.push({
     id: `effect:${command.commandId}:terminal.cleanup`,
     commandId: command.commandId,
     threadId: command.threadId,

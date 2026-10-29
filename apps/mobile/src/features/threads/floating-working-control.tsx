@@ -69,6 +69,9 @@ export const FLOATING_WORKING_CONTROL_COVERAGE = CONTROL_OVERLAY_OFFSET + CONTRO
 export function FloatingWorkingControl(props: {
   readonly colorScheme: "light" | "dark";
   readonly status: FloatingWorkingStatus | null;
+  readonly canStopBackgroundWork: boolean;
+  readonly stoppingBackgroundWork: boolean;
+  readonly onStopBackgroundWork: () => void;
   readonly devicePreview: { readonly count: number; readonly onPress: () => void } | null;
   readonly browserPreview: { readonly count: number; readonly onPress: () => void } | null;
   readonly showScrollToEnd: boolean;
@@ -87,6 +90,8 @@ export function FloatingWorkingControl(props: {
   const hasQueue = props.queuedCount > 0;
   const hasPreview = props.devicePreview !== null || props.browserPreview !== null;
   const [previewWidth, setPreviewWidth] = useState(0);
+  const [stopWidth, setStopWidth] = useState(0);
+  const showBackgroundStop = props.status?.kind === "background";
   const agents = props.agents;
   const hasAgents = agents !== null;
   // Segments keep their measured width; only the status label absorbs the
@@ -98,7 +103,8 @@ export function FloatingWorkingControl(props: {
       32 -
       (hasQueue ? queueWidth : 0) -
       (hasAgents ? agentsWidth : 0) -
-      (hasPreview ? previewWidth : 0),
+      (hasPreview ? previewWidth : 0) -
+      (showBackgroundStop ? stopWidth : 0),
   );
   const separationProgress = useSharedValue(props.showScrollToEnd ? 1 : 0);
 
@@ -164,7 +170,8 @@ export function FloatingWorkingControl(props: {
   // The queue, agents, questions, and reconnect labels have separate tap targets.
   const statusInteractive =
     props.status?.kind === "connection" || props.status?.kind === "child-input";
-  const capsuleInteractive = statusInteractive || hasQueue || hasAgents || hasPreview;
+  const capsuleInteractive =
+    statusInteractive || showBackgroundStop || hasQueue || hasAgents || hasPreview;
   // The host stays centered on the capsule, but its measurement constraint
   // comes from the overlay, independent of the capsule's current width.
   const statusContent =
@@ -195,6 +202,27 @@ export function FloatingWorkingControl(props: {
   const capsuleContent = (
     <View className="flex-row items-center">
       {statusContent}
+      {showBackgroundStop ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Stop background work"
+          accessibilityHint="Stops this thread's running commands, agents, and pull request watches"
+          accessibilityState={{
+            disabled: !props.canStopBackgroundWork || props.stoppingBackgroundWork,
+            busy: props.stoppingBackgroundWork,
+          }}
+          disabled={!props.canStopBackgroundWork || props.stoppingBackgroundWork}
+          onPress={props.onStopBackgroundWork}
+          onLayout={(event) => setStopWidth(event.nativeEvent.layout.width)}
+          className="h-11 shrink-0 flex-row items-center gap-2 px-3 active:opacity-70 disabled:opacity-50"
+        >
+          <View className="mr-1 h-4 w-px bg-border" />
+          <SymbolView name="stop.fill" size={13} tintColorClassName="foreground" />
+          <Text className="font-paperplane-medium text-xs text-foreground">
+            {props.stoppingBackgroundWork ? "Stopping…" : "Stop"}
+          </Text>
+        </Pressable>
+      ) : null}
       {hasPreview ? (
         <View
           className="h-11 flex-row items-center"

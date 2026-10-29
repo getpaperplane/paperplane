@@ -22,6 +22,7 @@ import * as TestClock from "effect/testing/TestClock";
 
 import * as CheckpointRollbackService from "./CheckpointRollbackService.ts";
 import * as EffectOutbox from "./EffectOutbox.ts";
+import * as BackgroundCommandService from "./BackgroundCommandService.ts";
 import * as EffectWorker from "./EffectWorker.ts";
 import * as RunFinalizationService from "./RunFinalizationService.ts";
 import * as ProviderSessionManager from "./ProviderSessionManager.ts";
@@ -152,6 +153,7 @@ function layerExecutorFor(input: {
   return EffectWorker.layerExecutor.pipe(
     Layer.provide(
       Layer.mergeAll(
+        Layer.mock(BackgroundCommandService.BackgroundCommandService)({}),
         layerDependencies,
         Layer.mock(ThreadManagementService.ThreadManagementService)(input.threads ?? {}),
         ServerSettings.layerTest(

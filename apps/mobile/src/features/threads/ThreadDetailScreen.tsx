@@ -217,6 +217,9 @@ export interface ThreadDetailScreenProps {
   readonly historyControls?: ThreadFeedHistoryControls;
   readonly activeThreadBusy: boolean;
   readonly canStopThread: boolean;
+  readonly canStopBackgroundWork: boolean;
+  readonly stoppingBackgroundWork: boolean;
+  readonly onStopBackgroundWork: () => void;
   /** Set while a queued message is open in the composer for editing. */
   readonly queuedRunEdit: QueuedRunEdit | null;
   readonly composerDraftKey: string | null;
@@ -1287,6 +1290,9 @@ export const ThreadDetailScreen = memo(function ThreadDetailScreen(props: Thread
                 <FloatingWorkingControl
                   colorScheme={isDarkMode ? "dark" : "light"}
                   status={floatingStatus}
+                  canStopBackgroundWork={props.canStopBackgroundWork}
+                  stoppingBackgroundWork={props.stoppingBackgroundWork}
+                  onStopBackgroundWork={props.onStopBackgroundWork}
                   lift={floatingControlLift}
                   devicePreview={
                     devicePreviews.length > 0

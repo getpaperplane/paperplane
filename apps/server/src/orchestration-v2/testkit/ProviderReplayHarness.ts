@@ -36,6 +36,8 @@ import * as CommandPolicy from "../CommandPolicy.ts";
 import * as CommandReceiptStore from "../CommandReceiptStore.ts";
 import * as ContextHandoffService from "../ContextHandoffService.ts";
 import * as EffectOutbox from "../EffectOutbox.ts";
+import * as CommandOutputHub from "../CommandOutputHub.ts";
+import * as BackgroundCommandService from "../BackgroundCommandService.ts";
 import * as EffectWorker from "../EffectWorker.ts";
 import * as EventSink from "../EventSink.ts";
 import * as EventStore from "../EventStore.ts";
@@ -261,6 +263,8 @@ export function layerProviderReplay<Transcript extends ProviderReplayTranscript,
   | Orchestrator.OrchestratorV2
   | EffectWorker.OrchestrationEffectWorkerV2
   | EventSink.EventSinkV2
+  | BackgroundCommandService.BackgroundCommandService
+  | CommandOutputHub.CommandOutputHub
   | CommandOutputRecorder.CommandOutputRecorder
   | ProviderSessionManager.ProviderSessionManagerV2,
   Error | MigrationError | ServerSettingsError | PlatformError.PlatformError | SqlError
@@ -299,6 +303,8 @@ export function layerWithRegistry<Error>(
   | EffectWorker.OrchestrationEffectWorkerV2
   | EventSink.EventSinkV2
   | ProviderSessionManager.ProviderSessionManagerV2
+  | BackgroundCommandService.BackgroundCommandService
+  | CommandOutputHub.CommandOutputHub
   | CommandOutputRecorder.CommandOutputRecorder,
   Error | MigrationError | ServerSettingsError | PlatformError.PlatformError | SqlError
 > {
@@ -530,7 +536,11 @@ export function layerWithRegistry<Error>(
           ),
         )
       : Layer.empty;
+  const layerBackgroundCommandsProvided = BackgroundCommandService.layer.pipe(
+    Layer.provide(Layer.merge(layerOrchestratorProvided, layerCommandOutputHubProvided)),
+  );
   const layerEffectExecutorProvided = EffectWorker.layerExecutor.pipe(
+    Layer.provide(layerBackgroundCommandsProvided),
     Layer.provide(
       Layer.mergeAll(
         layerRunFinalizationServiceProvided,
@@ -549,6 +559,7 @@ export function layerWithRegistry<Error>(
     Layer.provide(Layer.merge(layerStores, layerEffectExecutorProvided)),
   );
   const layerReplayRuntime = Layer.mergeAll(
+    layerBackgroundCommandsProvided,
     layerOrchestratorProvided,
     layerProviderSessionManagerProvided,
     layerEffectWorkerProvided,

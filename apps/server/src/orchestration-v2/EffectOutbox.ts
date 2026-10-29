@@ -13,6 +13,7 @@ import {
   RunId,
   RuntimeRequestId,
   ThreadId,
+  TurnItemId,
 } from "@getpaperplane/contracts";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
@@ -29,6 +30,11 @@ import * as SqlClient from "effect/sql/SqlClient";
 import { forkParked } from "../serverActivation.ts";
 
 export const OrchestrationEffectRequestV2 = Schema.Union([
+  Schema.Struct({ type: Schema.Literal("background-command.launch"), itemId: TurnItemId }),
+  Schema.Struct({
+    type: Schema.Literal("background-command.terminate"),
+    itemId: Schema.optional(TurnItemId),
+  }),
   Schema.Struct({
     type: Schema.Literal("provider-runtime.continue"),
     sourceRunId: RunId,
@@ -137,6 +143,8 @@ export const REPLAY_SAFE_EFFECT_TYPES_AFTER_PROCESS_LOSS = [
 ] as const satisfies ReadonlyArray<OrchestrationEffectRequestV2["type"]>;
 
 export const PROCESS_BOUND_EFFECT_TYPES = [
+  "background-command.launch",
+  "background-command.terminate",
   "provider-turn.start",
   "provider-turn.interrupt",
   "provider-turn.steer",

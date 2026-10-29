@@ -1,3 +1,5 @@
+import { useAtomValue } from "@effect/atom-react";
+import { orchestrationEnvironment } from "../../state/orchestration";
 import {
   linkedPullRequestContextOf,
   resolveThreadCurrentPullRequestLink,
@@ -303,6 +305,27 @@ function ThreadRouteContent(
   const gitActions = useSelectedThreadGitActions();
   const requests = useSelectedThreadRequests();
   const interruptThreadTurn = useAtomCommand(threadEnvironment.interruptTurn, "thread interrupt");
+  const canStopBackgroundWork = useAtomValue(
+    orchestrationEnvironment.v2.dispatchCommand.permissionAtom(
+      selectedThread?.environmentId ?? null,
+    ),
+  );
+  const [stoppingBackgroundWork, setStoppingBackgroundWork] = useState(false);
+  const stoppingBackgroundWorkRef = useRef(false);
+  const handleStopBackgroundWork = useCallback(async () => {
+    if (!selectedThread || !canStopBackgroundWork || stoppingBackgroundWorkRef.current) return;
+    stoppingBackgroundWorkRef.current = true;
+    setStoppingBackgroundWork(true);
+    try {
+      await interruptThreadTurn({
+        environmentId: selectedThread.environmentId,
+        input: { threadId: selectedThread.id },
+      });
+    } finally {
+      stoppingBackgroundWorkRef.current = false;
+      setStoppingBackgroundWork(false);
+    }
+  }, [canStopBackgroundWork, interruptThreadTurn, selectedThread]);
   const loadEarlierHistory = useAtomCommand(threadEnvironment.loadEarlierHistory, {
     label: "load earlier thread history",
     reportFailure: false,
@@ -1050,6 +1073,9 @@ function ThreadRouteContent(
           threadSyncStatus={selectedThreadDetailState.status}
           historyControls={historyControls}
           activeThreadBusy={composer.activeThreadBusy}
+          canStopBackgroundWork={canStopBackgroundWork}
+          stoppingBackgroundWork={stoppingBackgroundWork}
+          onStopBackgroundWork={handleStopBackgroundWork}
           canStopThread={awaitingBootstrapTurn || composer.interruptibleRunId !== null}
           queuedRunEdit={composer.queuedRunEdit}
           composerDraftKey={composer.composerDraftKey}
