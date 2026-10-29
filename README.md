@@ -1,5 +1,12 @@
 # Paperplane
 
+> [!NOTE]
+> Paperplane is no longer maintained. There are no plans for further updates or releases.
+>
+> I started Paperplane to use Pi in [T3 Code](https://github.com/pingdotgg/t3code). T3 Code now supports Pi and continues to improve rapidly, so I've decided to conclude development of this fork. I recommend T3 Code for continued updates.
+>
+> Thank you to the T3 Code team for the project that made Paperplane possible. The source and documentation remain available under the MIT License.
+
 Paperplane is an open-source app for running coding agents on web, desktop, and mobile. Run it on the machine where your agents live, or connect to that machine from another device.
 
 You bring your own subscriptions. If a provider is set up on the host, Paperplane can drive it:
@@ -15,7 +22,7 @@ You bring your own subscriptions. If a provider is set up on the host, Paperplan
 
 ## Install
 
-**Desktop:** download a build for macOS, Windows, or Linux from [Releases](https://github.com/getpaperplane/paperplane/releases). Stable and nightly channels are available; nightlies publish daily when there are new commits. macOS builds are self-signed rather than notarized, so you will need to approve the first install. See [Install Paperplane](./docs/user/install.md).
+**Desktop:** download an existing build for macOS, Windows, or Linux from [Releases](https://github.com/getpaperplane/paperplane/releases). No further stable or nightly releases are planned. macOS builds are self-signed rather than notarized, so you will need to approve the first install. See [Install Paperplane](./docs/user/install.md).
 
 **CLI host** (headless server for LAN, Tailscale, or SSH access):
 
@@ -71,6 +78,6 @@ Start at the [documentation index](./docs). Good entry points:
 
 ## Origins and license
 
-Paperplane is a fork of [T3 Code](https://github.com/pingdotgg/t3code) with its own repository, releases, and roadmap. We still pull in upstream changes and keep T3 Tools' original copyright notice under the [MIT License](./LICENSE). Paperplane is not affiliated with or endorsed by T3 Tools or Ping Labs.
+Paperplane is a fork of [T3 Code](https://github.com/pingdotgg/t3code) with its own repository and releases. It retains T3 Tools' original copyright notice under the [MIT License](./LICENSE). Paperplane is not affiliated with or endorsed by T3 Tools or Ping Labs.
 
 If a change would also help T3 Code users, consider proposing it upstream.
