@@ -39,6 +39,7 @@ import { ServerConfig } from "../../config.ts";
 import { acquirePiResource, disposePiResource } from "../../provider/Layers/PiLifecycle.ts";
 import {
   piContextUsage,
+  piSkillNames,
   resolvePiToolCallArgs,
   translatePiSkillToken,
   type PiCreateSessionInput,
@@ -1145,7 +1146,10 @@ export const makePiAdapterV2 = Effect.fn("makePiAdapterV2")(function* (
                 turnInput.message.text.trim() === "/compact"
                   ? (resource.compact?.() ??
                     Promise.reject(new Error("Pi compaction is unavailable")))
-                  : resource.prompt(translatePiSkillToken(turnInput.message.text), { images }),
+                  : resource.prompt(
+                      translatePiSkillToken(turnInput.message.text, piSkillNames(resource)),
+                      { images },
+                    ),
               ).pipe(
                 Effect.catch((error) =>
                   Effect.gen(function* () {
@@ -1175,7 +1179,7 @@ export const makePiAdapterV2 = Effect.fn("makePiAdapterV2")(function* (
           runtime.startTurn({ ...turnInput, message: { ...turnInput.message, text: "/compact" } }),
         steerTurn: (steer) =>
           Effect.tryPromise(() =>
-            session!.prompt(translatePiSkillToken(steer.message.text), {
+            session!.prompt(translatePiSkillToken(steer.message.text, piSkillNames(session!)), {
               streamingBehavior: "steer",
             }),
           ).pipe(

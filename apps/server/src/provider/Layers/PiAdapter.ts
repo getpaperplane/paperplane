@@ -90,6 +90,7 @@ export interface PiSessionLike {
     | undefined;
   getLeafId?(): string | undefined;
   fork?(entryId: string | null): Promise<void>;
+  readonly resourceLoader?: { getSkills(): { skills: ReadonlyArray<{ readonly name: string }> } };
 }
 export interface PiCreateSessionInput {
   /** Environment for Paperplane's shell tools, not arbitrary extension processes. */
@@ -136,10 +137,30 @@ export function parsePiResumeCursor(raw: unknown) {
   }
   return { sessionId, ...(sessionFile ? { sessionFile } : {}), turnBoundaries };
 }
-export function translatePiSkillToken(text: string) {
-  return text
-    .replace(/^\$([^\s]+)(?:\s+|$)/, (_match, name: string) => `/skill:${name} `)
-    .trimEnd();
+/**
+ * Same token shape as `ClaudeSkillDispatch`, so every provider dispatches the
+ * same mentions. Pi only expands a skill when the prompt starts with
+ * `/skill:<name>`, and everything after the name becomes its arguments, so the
+ * last known mention is moved to the front and the text around it is kept.
+ */
+const PI_SKILL_MENTION_PATTERN =
+  /(^|\s)\p{Sc}(?![0-9][0-9_]*(?:[kKmMbBtT]|[eE][0-9]+)?(?:\s|$))(?=[a-zA-Z0-9:_-]*[a-zA-Z])([a-zA-Z0-9][a-zA-Z0-9:_-]*)(?=\s|$)/gu;
+
+export function piSkillNames(session: PiSessionLike): ReadonlySet<string> {
+  return new Set(session.resourceLoader?.getSkills().skills.map((skill) => skill.name) ?? []);
+}
+
+export function translatePiSkillToken(text: string, skillNames: ReadonlySet<string>) {
+  const mention = [...text.matchAll(PI_SKILL_MENTION_PATTERN)]
+    .filter((match) => skillNames.has(match[2] ?? ""))
+    .at(-1);
+  if (!mention) return text;
+  const start = (mention.index ?? 0) + (mention[1]?.length ?? 0);
+  const end = (mention.index ?? 0) + mention[0].length;
+  const before = text.slice(0, start).trimEnd();
+  const after = text.slice(end).trimStart();
+  const rest = before && after ? `${before} ${after}` : `${before}${after}`;
+  return `/skill:${mention[2]} ${rest}`.trimEnd();
 }
 export function resolvePiToolCallArgs(
   messages: ReadonlyArray<unknown>,
